@@ -10,10 +10,11 @@ ForgePCB
 See: `/ACTIVE_SLICE.md`
 
 ## Current Focus
-- SPRINT_002 COMPLETE: Feature F002 electrical architecture implemented
-- Power PCB and DBB (signal backbone) defined in Atopile
-- All 11 frozen decisions validated and verified
-- Ready for Feature F003/F004/F005 implementation or PCB layout
+- SPRINT_003 IN PROGRESS: Feature F003 MCU carriers implementation
+- ESP32-S3 DevKit and RP2040 Pico carriers defined in Atopile
+- GPIO exposure (16× Dupont + 8× terminals) per carrier
+- Integration with ForgePCB power and system architecture
+- Ready for validation and feature closure
 
 ## Blocking Items
 - None

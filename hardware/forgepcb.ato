@@ -1,15 +1,17 @@
 # ForgePCB - Top-Level System Integration
 # Feature F002: Power and Signal Subsystems
+# Feature F003: MCU Carriers and I/O Exposure
 
 from "power/power_pcb.ato" import PowerPCB
 from "dbb/dbb.ato" import DBB
+from "mcu/mcu_carriers.ato" import MCUCarriers
 
 module ForgePCB:
     """
     Complete ForgePCB system.
 
     Feature F002: Power and Signal Subsystems
-    Two-PCB architecture: Power PCB + DBB (Digital Backbone)
+    Feature F003: MCU Carriers and I/O Exposure
 
     System Overview:
     ================
@@ -28,6 +30,15 @@ module ForgePCB:
     - Debug corner: 16-channel logic analyzer header
     - Clean signal routing (separated from high-power zones)
 
+    MCU Carriers:
+    - ESP32-S3 DevKit class carrier (Route A: devboard docks in tray)
+    - RP2040 Pico footprint carrier (Route A: devboard docks in tray)
+    - GPIO exposure: 16× Dupont headers + 8× screw terminals per carrier
+    - USB-C connectors rigidly aligned to enclosure cutouts
+    - Control buttons: EN + BOOT (ESP32), RUN (Pico)
+    - Carrier envelope: 80×120 mm with 4× M3 mounting
+    - Canonical GPIO labeling (silkscreen defines stable index)
+
     Power Flow:
     ===========
     1. 24V input → Power PCB input stage (fuse, connector)
@@ -35,43 +46,61 @@ module ForgePCB:
     3. 24V → Variable bay module → 0-24V adjustable output
     4. Rails → eFuse protection → Protected outputs
     5. Protected outputs → DBB → Bus headers and debug
+    6. Protected outputs → MCU Carriers → Devboards (ESP32/Pico)
 
-    Interface Between PCBs:
-    =======================
+    Interface Between PCBs/Modules:
+    ================================
     Power PCB → DBB:
     - 5V_OUT: Protected 5V rail (up to 5A)
     - 3V3_OUT: Protected 3.3V rail (up to 3A)
     - GND: Common ground plane
     - FAULT_5V, FAULT_3V3: Fault telemetry (optional)
 
-    Physical connection: Ribbon cable or high-current header
+    Power PCB → MCU Carriers:
+    - 5V_OUT: Protected 5V rail (powers devboards)
+    - 3V3_OUT: Protected 3.3V rail (auxiliary power)
+    - GND: Common ground plane
+
+    Physical connection: Ribbon cables or high-current headers
 
     Physical Architecture:
     ======================
-    - Two separate PCBs (Power PCB + DBB)
+    - Two separate PCBs (Power PCB + DBB) + MCU Carrier modules
     - Power PCB: Mounted in high-power zone of enclosure
     - DBB: Mounted in clean signal zone of enclosure
-    - Enclosure zones: Input, conversion, protection, variable bay, bus headers, debug
-    - Front panel: Switches, LEDs, banana jacks (Power PCB)
-    - Front/side panel: Bus headers, DIP switches, LA header (DBB)
+    - MCU Carriers: Mounted in dedicated carrier zones (80×120 mm, M3 mounting)
+    - Enclosure zones: Input, conversion, protection, variable bay, bus headers, debug, carriers
+    - Front panel: Switches, LEDs, banana jacks (Power PCB), USB-C (carriers)
+    - Front/side panel: Bus headers, DIP switches, LA header (DBB), GPIO headers/terminals (carriers)
 
     Frozen Decisions Implemented:
     ==============================
-    §4.1: 24V power brick, 10A fuse ✓
-    §4.2: Two-PCB split (Power PCB + DBB) ✓
-    §4.3: eFuse protection (3 channels, latch-off) ✓
-    §4.4: Rail capabilities (5V @ 5A, 3.3V @ 3A) ✓
-    §4.5: Breadboard policy (3.3V/5V/GND on headers) ✓
-    §4.6: Variable bay (0-24V, 3A, banana outputs, display) ✓
-    §4.7: UX (rocker switches, LEDs, reset buttons) ✓
-    §4.8: Bus headers (I²C, UART, SPI, RS-485, Dupont) ✓
-    §4.9: RS-485 switches (TERM, BIAS, VLOGIC) ✓
-    §4.10: Logic analyzer (16-channel header, debug corner) ✓
-    §4.11: Power distribution (multiple taps, eFuse-protected) ✓
+    Feature F002 (Power and Signal Subsystems):
+    - §4.1: 24V power brick, 10A fuse ✓
+    - §4.2: Two-PCB split (Power PCB + DBB) ✓
+    - §4.3: eFuse protection (3 channels, latch-off) ✓
+    - §4.4: Rail capabilities (5V @ 5A, 3.3V @ 3A) ✓
+    - §4.5: Breadboard policy (3.3V/5V/GND on headers) ✓
+    - §4.6: Variable bay (0-24V, 3A, banana outputs, display) ✓
+    - §4.7: UX (rocker switches, LEDs, reset buttons) ✓
+    - §4.8: Bus headers (I²C, UART, SPI, RS-485, Dupont) ✓
+    - §4.9: RS-485 switches (TERM, BIAS, VLOGIC) ✓
+    - §4.10: Logic analyzer (16-channel header, debug corner) ✓
+    - §4.11: Power distribution (multiple taps, eFuse-protected) ✓
+
+    Feature F003 (MCU Carriers and I/O Exposure):
+    - §4.1: Route A carriers (devboards dock in trays) ✓
+    - §4.2: Canonical boards (ESP32-S3, RP2040 Pico) ✓
+    - §4.3: Carrier envelope (80×120 mm, M3 mounting) ✓
+    - §4.4: USB-C rigidly aligned ✓
+    - §4.5: GPIO exposure (16× Dupont + 8× terminals) ✓
+    - §4.6: Terminal mapping (T1-T4 digital, T5-T8 analog) ✓
+    - §4.7: Controls (EN+BOOT for ESP32, RUN for Pico) ✓
+    - §4.8: No extra test pads for LA (DBB-centric) ✓
+    - §4.9: Canonical labeling (carrier silkscreen defines GPIO index) ✓
 
     Excluded Scope (Not Implemented):
     ==================================
-    - MCU carriers (ESP32-S3, RP2040 Pico) → Feature F003
     - Enclosure physical execution → Feature F004
     - Firmware tooling (USB hub, programming) → Feature F005
     - PCB layout, routing, DRC → Downstream work
@@ -82,18 +111,24 @@ module ForgePCB:
 
     power_pcb = new PowerPCB
     dbb = new DBB
+    mcu_carriers = new MCUCarriers
 
     # === Common Ground ===
     signal GND
 
     power_pcb.GND ~ GND
     dbb.GND ~ GND
+    mcu_carriers.GND ~ GND
 
     # === Inter-PCB Power Interface ===
 
-    # Power PCB provides protected rails to DBB
+    # Power PCB provides protected rails to DBB and MCU carriers
     power_pcb.5V_OUT ~ dbb.5V_IN
     power_pcb.3V3_OUT ~ dbb.3V3_IN
+
+    # Power PCB provides protected rails to MCU carriers
+    power_pcb.5V_OUT ~ mcu_carriers.5V_IN
+    power_pcb.3V3_OUT ~ mcu_carriers.3V3_IN
 
     # === Inter-PCB Telemetry (Optional) ===
 

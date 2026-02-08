@@ -1,0 +1,243 @@
+# MCU Carriers - Common Definitions
+# Feature F003: MCU Carriers and I/O Exposure
+
+module CarrierCommon:
+    """
+    Common definitions and constraints for all MCU carriers.
+
+    Frozen Decision §4 (F003):
+    - Route A carriers: devboards dock into trays (no embedded MCU)
+    - Carrier envelope: 80×120 mm with 4× M3 fixed mounting
+    - USB-C rigidly aligned to enclosure cutout
+    - GPIO exposure: 16× Dupont + 8× screw terminals
+    - Terminal mapping: T1-T4 (digital/high-drive), T5-T8 (analog/input)
+    - Canonical labeling: carrier silkscreen defines GPIO index
+    """
+
+    # === Carrier Mechanical Envelope ===
+    """
+    All carriers follow this mechanical standard:
+    - PCB dimensions: 80 mm × 120 mm
+    - Mounting: 4× M3 holes in fixed pattern
+    - Thickness: Standard 1.6mm PCB
+    - Clearance: Minimum 5mm from board edge to components
+    """
+
+    # Mounting hole positions (from bottom-left corner, in mm)
+    # M3 holes at corners with 5mm edge clearance
+    signal MOUNT_HOLE_1  # Bottom-left: (5mm, 5mm)
+    signal MOUNT_HOLE_2  # Bottom-right: (75mm, 5mm)
+    signal MOUNT_HOLE_3  # Top-left: (5mm, 115mm)
+    signal MOUNT_HOLE_4  # Top-right: (75mm, 115mm)
+
+    # === Power Interface ===
+    """
+    Carriers consume power from ForgePCB Power PCB.
+
+    Available rails:
+    - 5V: For devboards requiring 5V input (ESP32-S3 DevKit, RP2040 Pico)
+    - 3.3V: For level shifting or auxiliary power (future use)
+    - GND: Common ground plane
+
+    No level shifting on carrier: GPIO levels match devboard native levels.
+    """
+    signal 5V_IN
+    signal 3V3_IN
+    signal GND
+
+    # === GPIO Exposure Standard ===
+    """
+    All carriers expose GPIO via:
+    1. Dupont headers: 16× GPIOs (full GPIO bank)
+    2. Screw terminals: 8× GPIOs (subset of Dupont, terminals T1-T8)
+
+    Terminal role mapping (frozen):
+    - T1-T4: Digital/high-drive candidates (e.g., PWM, digital out)
+    - T5-T8: Analog/input candidates (e.g., ADC, sensors)
+
+    Canonical GPIO index:
+    - GPIO0-GPIO15: Carrier silkscreen defines stable index
+    - DBB and tooling MUST NOT reinterpret or rename
+    - Index is semantic, not MCU pin number
+    """
+
+    # 16 GPIO signals (canonical index)
+    signal GPIO0
+    signal GPIO1
+    signal GPIO2
+    signal GPIO3
+    signal GPIO4
+    signal GPIO5
+    signal GPIO6
+    signal GPIO7
+    signal GPIO8
+    signal GPIO9
+    signal GPIO10
+    signal GPIO11
+    signal GPIO12
+    signal GPIO13
+    signal GPIO14
+    signal GPIO15
+
+    # === Dupont Header Bank (16× GPIO) ===
+    component gpio_header_bank:
+        """
+        16-pin Dupont header exposing all GPIOs.
+
+        Pinout (1×16 or 2×8):
+        - Pin 1-16: GPIO0-GPIO15
+
+        Physical placement:
+        - Along one edge of carrier PCB
+        - Clearly labeled with silkscreen (GPIO0-GPIO15)
+        - Accessible without removing carrier from enclosure
+        """
+        footprint = "PinHeader_1x16_P2.54mm_Vertical"  # or 2×8 dual-row
+        designator = "J_GPIO"
+
+        signal pin1   # GPIO0
+        signal pin2   # GPIO1
+        signal pin3   # GPIO2
+        signal pin4   # GPIO3
+        signal pin5   # GPIO4
+        signal pin6   # GPIO5
+        signal pin7   # GPIO6
+        signal pin8   # GPIO7
+        signal pin9   # GPIO8
+        signal pin10  # GPIO9
+        signal pin11  # GPIO10
+        signal pin12  # GPIO11
+        signal pin13  # GPIO12
+        signal pin14  # GPIO13
+        signal pin15  # GPIO14
+        signal pin16  # GPIO15
+
+    # Connect GPIO signals to header
+    gpio_header_bank.pin1 ~ GPIO0
+    gpio_header_bank.pin2 ~ GPIO1
+    gpio_header_bank.pin3 ~ GPIO2
+    gpio_header_bank.pin4 ~ GPIO3
+    gpio_header_bank.pin5 ~ GPIO4
+    gpio_header_bank.pin6 ~ GPIO5
+    gpio_header_bank.pin7 ~ GPIO6
+    gpio_header_bank.pin8 ~ GPIO7
+    gpio_header_bank.pin9 ~ GPIO8
+    gpio_header_bank.pin10 ~ GPIO9
+    gpio_header_bank.pin11 ~ GPIO10
+    gpio_header_bank.pin12 ~ GPIO11
+    gpio_header_bank.pin13 ~ GPIO12
+    gpio_header_bank.pin14 ~ GPIO13
+    gpio_header_bank.pin15 ~ GPIO14
+    gpio_header_bank.pin16 ~ GPIO15
+
+    # === Screw Terminal Bank (8× GPIO subset) ===
+    """
+    Screw terminals for robust connections (motors, sensors, power).
+
+    Terminal assignments (frozen mapping):
+    - T1: GPIO0 (digital/high-drive)
+    - T2: GPIO1 (digital/high-drive)
+    - T3: GPIO2 (digital/high-drive)
+    - T4: GPIO3 (digital/high-drive)
+    - T5: GPIO4 (analog/input)
+    - T6: GPIO5 (analog/input)
+    - T7: GPIO6 (analog/input)
+    - T8: GPIO7 (analog/input)
+
+    Additional terminals:
+    - 2× GND terminals near terminal bank for return paths
+    """
+
+    component terminal_block_gpio:
+        """
+        8-position screw terminal block for GPIO.
+
+        Spec: 5mm pitch, 12A rated, panel-mount or PCB-mount.
+        Candidate: Phoenix Contact MKDS series or equivalent.
+        """
+        footprint = "TerminalBlock_Phoenix_MKDS_1x08_P5.00mm"
+        designator = "TB_GPIO"
+
+        signal t1  # GPIO0 (digital/high-drive)
+        signal t2  # GPIO1
+        signal t3  # GPIO2
+        signal t4  # GPIO3
+        signal t5  # GPIO4 (analog/input)
+        signal t6  # GPIO5
+        signal t7  # GPIO6
+        signal t8  # GPIO7
+
+    component terminal_block_gnd:
+        """
+        2-position screw terminal block for GND returns.
+        """
+        footprint = "TerminalBlock_Phoenix_MKDS_1x02_P5.00mm"
+        designator = "TB_GND"
+
+        signal gnd1
+        signal gnd2
+
+    # Connect terminals to GPIO signals
+    terminal_block_gpio.t1 ~ GPIO0
+    terminal_block_gpio.t2 ~ GPIO1
+    terminal_block_gpio.t3 ~ GPIO2
+    terminal_block_gpio.t4 ~ GPIO3
+    terminal_block_gpio.t5 ~ GPIO4
+    terminal_block_gpio.t6 ~ GPIO5
+    terminal_block_gpio.t7 ~ GPIO6
+    terminal_block_gpio.t8 ~ GPIO7
+
+    # Connect GND terminals
+    terminal_block_gnd.gnd1 ~ GND
+    terminal_block_gnd.gnd2 ~ GND
+
+    # === USB Alignment Standard ===
+    """
+    USB-C connector rigidly aligned to enclosure cutout.
+
+    Frozen decision §4.4:
+    - USB-C connector on carrier PCB
+    - No internal USB pigtails
+    - Connector position matches enclosure front panel cutout
+    - Direct connection to devboard USB (via tray traces or direct)
+    """
+
+    # USB signals (passed through from devboard to front panel)
+    signal USB_DP   # USB Data Plus
+    signal USB_DM   # USB Data Minus
+    signal USB_VBUS # USB 5V bus
+    signal USB_GND  # USB ground
+
+    # === Mounting Hardware ===
+    component mount_hole_1:
+        footprint = "MountingHole_3.2mm_M3"
+        designator = "H1"
+
+    component mount_hole_2:
+        footprint = "MountingHole_3.2mm_M3"
+        designator = "H2"
+
+    component mount_hole_3:
+        footprint = "MountingHole_3.2mm_M3"
+        designator = "H3"
+
+    component mount_hole_4:
+        footprint = "MountingHole_3.2mm_M3"
+        designator = "H4"
+
+    # === Carrier Physical Notes ===
+    """
+    Physical placement guidelines:
+
+    - USB connector: Front edge of PCB (aligned to enclosure cutout)
+    - Dupont headers: Left or right edge (accessible from side)
+    - Screw terminals: Opposite edge from Dupont (front or side)
+    - Devboard tray: Center of PCB (80×120 mm envelope accommodates most devboards)
+    - Control buttons: Top edge or front (accessible without disassembly)
+    - Mounting holes: 4× M3 at corners (5mm edge clearance)
+
+    Enclosure integration:
+    - Carrier slides into enclosure zone (F004 defines zones)
+    - USB connector aligns with front panel cutout
+    - Headers and terminals accessible from front/side panels
+    """
