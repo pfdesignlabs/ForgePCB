@@ -1,0 +1,141 @@
+# Power PCB - Variable Power Bay Module
+# Feature F002 §4.6: 0-24V, 3A, banana outputs, display, eFuse protection
+
+module VariablePowerBay:
+    """
+    Adjustable power bay with banana jack outputs.
+
+    Frozen Decision §4.6:
+    - Adjustable DC-DC module: 0-24V output, ≥3A capability
+    - Integrated display module (voltage/current readout)
+    - Integrated enable switch on module
+    - Banana jack outputs (red + black pair)
+    - Downstream eFuse for safety cutoff (3A limit)
+
+    Interface:
+    - Input: 24V_IN (from PowerInput module)
+    - Output: VVAR_RAIL (to eFuse protection)
+    - Control: Module onboard controls (potentiometer, enable switch)
+    - Fault: Integrated with main eFuse/fault system
+    """
+
+    # Input power
+    signal 24V_IN
+    signal GND
+
+    # Output to eFuse
+    signal VVAR_RAIL
+
+    # Adjustable DC-DC module
+    component var_dcdc_module:
+        """
+        Adjustable DC-DC converter module with display and enable.
+
+        Candidate modules:
+        - DPS5005 (0-50V, 5A, programmable, display)
+        - RD6006 (0-60V, 6A, Wi-Fi, display)
+        - Custom module based on LM2596/LM2576 with pot + display
+
+        Requirements:
+        - Output range: 0-24V (adjustable via onboard potentiometer)
+        - Current capability: ≥3A continuous
+        - Voltage/current display (LED or LCD module)
+        - Enable switch on module
+        - Output short-circuit protection
+
+        Note: Many pre-built modules include display and controls.
+        Alternative: Build custom with buck IC + LCD + rotary encoder.
+
+        Physical: Large module, requires dedicated zone on Power PCB.
+        """
+        footprint = "Module_DCDC_Variable"  # Custom footprint for module mounting
+        mpn = "TBD"  # Select pre-built module or design custom
+        designator = "M1"
+
+        signal VIN
+        signal VOUT
+        signal GND
+
+    # Module input bulk capacitor (if needed beyond module internals)
+    component var_cin:
+        footprint = "CP_Radial_D10.0mm_P5.00mm"
+        capacitance = 220uF
+        voltage_rating = 35V
+        type = "electrolytic"
+        designator = "C11"
+        signal plus
+        signal minus
+
+    # Module output bulk capacitor (low ESR for transient response)
+    component var_cout:
+        footprint = "CP_Radial_D10.0mm_P5.00mm"
+        capacitance = 470uF
+        voltage_rating = 35V
+        type = "electrolytic"
+        designator = "C12"
+        signal plus
+        signal minus
+
+    # Banana jack outputs
+    component banana_red:
+        """
+        Banana jack (red, positive output).
+
+        Spec: Panel-mount, insulated, 30V/15A rated.
+        Candidate: Keystone 575 series or equivalent.
+        """
+        footprint = "BananaJack_PanelMount"
+        color = "red"
+        mpn = "TBD"
+        designator = "J2"
+
+        signal pin
+
+    component banana_black:
+        """
+        Banana jack (black, ground return).
+        """
+        footprint = "BananaJack_PanelMount"
+        color = "black"
+        mpn = "TBD"
+        designator = "J3"
+
+        signal pin
+
+    # ===== Connections =====
+
+    # Input from 24V rail
+    24V_IN ~ var_cin.plus
+    var_cin.minus ~ GND
+
+    24V_IN ~ var_dcdc_module.VIN
+    var_dcdc_module.GND ~ GND
+
+    # Module output to downstream eFuse
+    var_dcdc_module.VOUT ~ var_cout.plus
+    var_cout.minus ~ GND
+
+    var_dcdc_module.VOUT ~ VVAR_RAIL
+
+    # Banana jack outputs (after eFuse in protection module)
+    # Note: These are connected to VVAR_OUT (protected output) in integration
+    # For now, placeholders for physical banana jacks
+    signal VVAR_OUT_PROTECTED  # From eFuse output
+    banana_red.pin ~ VVAR_OUT_PROTECTED
+    banana_black.pin ~ GND
+
+    # === Operational Notes ===
+    # Module controls:
+    # - Onboard potentiometer: adjust output voltage 0-24V
+    # - Onboard enable switch: turn output on/off
+    # - Display: real-time voltage/current readout
+    #
+    # Safety:
+    # - Downstream eFuse (in ProtectionAndUI module) provides 3A hard limit
+    # - Module internal short-circuit protection
+    # - User can set current limit via module controls (if supported)
+    #
+    # Physical placement:
+    # - Dedicated zone on Power PCB (high-power area)
+    # - Banana jacks on front panel for easy access
+    # - Display visible on front panel

@@ -1,0 +1,206 @@
+# Power PCB - Voltage Conversion Module
+# Feature F002 §4.4: 5V @ 5A, 3.3V @ 3A buck converters
+
+module VoltageConversion:
+    """
+    Buck converter stage for fixed rails.
+
+    Frozen Decision §4.4:
+    - 5V rail: 5A capability (buck from 24V)
+    - 3.3V rail: 3A capability (buck from 24V)
+    - Synchronous buck topology for efficiency
+    - Output capacitors per datasheet recommendations
+
+    Interface:
+    - Input: 24V_IN from PowerInput module
+    - Outputs: 5V_RAIL, 3V3_RAIL
+    """
+
+    # Input power
+    signal 24V_IN
+    signal GND
+
+    # Output rails
+    signal 5V_RAIL
+    signal 3V3_RAIL
+
+    # 24V → 5V Buck Converter (5A capability)
+    component buck_5v:
+        """
+        Synchronous buck converter: 24V → 5V @ 5A
+
+        Candidate parts:
+        - TI TPS54560 (5A sync buck, integrated FETs)
+        - Recom R-78E5.0-0.5 (module option, simpler but larger)
+        - MEAN WELL LDD-xxxH series (LED driver, constant current option)
+
+        Thermal: Ensure adequate copper area or heatsink for ~10W dissipation
+        """
+        footprint = "SOIC-8_3.9x4.9mm"  # Example for TPS54560-like
+        mpn = "TBD"  # Select during layout
+        designator = "U1"
+
+        signal VIN
+        signal VOUT
+        signal GND
+        signal EN  # Enable input (from eFuse control)
+        signal FB  # Feedback (resistor divider for 5V setpoint)
+
+    # 5V buck input capacitor
+    component buck_5v_cin:
+        footprint = "C_1206"
+        capacitance = 22uF
+        voltage_rating = 35V
+        type = "ceramic_X7R"
+        designator = "C2"
+        signal p
+        signal n
+
+    # 5V buck output capacitors (2× 47uF for low ESR)
+    component buck_5v_cout1:
+        footprint = "C_1206"
+        capacitance = 47uF
+        voltage_rating = 10V
+        type = "ceramic_X7R"
+        designator = "C3"
+        signal p
+        signal n
+
+    component buck_5v_cout2:
+        footprint = "C_1206"
+        capacitance = 47uF
+        voltage_rating = 10V
+        type = "ceramic_X7R"
+        designator = "C4"
+        signal p
+        signal n
+
+    # 5V feedback resistor divider (example values, adjust per IC)
+    component r_fb_5v_upper:
+        footprint = "R_0805"
+        resistance = 10kOhm
+        power_rating = 0.125W
+        designator = "R1"
+        signal a
+        signal b
+
+    component r_fb_5v_lower:
+        footprint = "R_0805"
+        resistance = 2.2kOhm  # Adjust for 5V output
+        power_rating = 0.125W
+        designator = "R2"
+        signal a
+        signal b
+
+    # 24V → 3.3V Buck Converter (3A capability)
+    component buck_3v3:
+        """
+        Synchronous buck converter: 24V → 3.3V @ 3A
+
+        Candidate parts:
+        - TI TPS54360 (3A sync buck)
+        - Recom R-78E3.3-0.5 (module option)
+
+        Thermal: Ensure adequate copper area or heatsink for ~8W dissipation
+        """
+        footprint = "SOIC-8_3.9x4.9mm"
+        mpn = "TBD"
+        designator = "U2"
+
+        signal VIN
+        signal VOUT
+        signal GND
+        signal EN
+        signal FB
+
+    # 3.3V buck input capacitor
+    component buck_3v3_cin:
+        footprint = "C_1206"
+        capacitance = 22uF
+        voltage_rating = 35V
+        type = "ceramic_X7R"
+        designator = "C5"
+        signal p
+        signal n
+
+    # 3.3V buck output capacitors (2× 47uF for low ESR)
+    component buck_3v3_cout1:
+        footprint = "C_1206"
+        capacitance = 47uF
+        voltage_rating = 6.3V
+        type = "ceramic_X7R"
+        designator = "C6"
+        signal p
+        signal n
+
+    component buck_3v3_cout2:
+        footprint = "C_1206"
+        capacitance = 47uF
+        voltage_rating = 6.3V
+        type = "ceramic_X7R"
+        designator = "C7"
+        signal p
+        signal n
+
+    # 3.3V feedback resistor divider
+    component r_fb_3v3_upper:
+        footprint = "R_0805"
+        resistance = 10kOhm
+        power_rating = 0.125W
+        designator = "R3"
+        signal a
+        signal b
+
+    component r_fb_3v3_lower:
+        footprint = "R_0805"
+        resistance = 1.5kOhm  # Adjust for 3.3V output
+        power_rating = 0.125W
+        designator = "R4"
+        signal a
+        signal b
+
+    # === 5V Buck Connections ===
+    24V_IN ~ buck_5v_cin.p
+    buck_5v_cin.n ~ GND
+
+    buck_5v_cin.p ~ buck_5v.VIN
+    buck_5v.GND ~ GND
+
+    buck_5v.VOUT ~ buck_5v_cout1.p
+    buck_5v.VOUT ~ buck_5v_cout2.p
+    buck_5v_cout1.n ~ GND
+    buck_5v_cout2.n ~ GND
+
+    buck_5v.VOUT ~ 5V_RAIL
+
+    # Feedback divider for 5V
+    buck_5v.VOUT ~ r_fb_5v_upper.a
+    r_fb_5v_upper.b ~ r_fb_5v_lower.a
+    r_fb_5v_lower.b ~ GND
+    r_fb_5v_upper.b ~ buck_5v.FB
+
+    # === 3.3V Buck Connections ===
+    24V_IN ~ buck_3v3_cin.p
+    buck_3v3_cin.n ~ GND
+
+    buck_3v3_cin.p ~ buck_3v3.VIN
+    buck_3v3.GND ~ GND
+
+    buck_3v3.VOUT ~ buck_3v3_cout1.p
+    buck_3v3.VOUT ~ buck_3v3_cout2.p
+    buck_3v3_cout1.n ~ GND
+    buck_3v3_cout2.n ~ GND
+
+    buck_3v3.VOUT ~ 3V3_RAIL
+
+    # Feedback divider for 3.3V
+    buck_3v3.VOUT ~ r_fb_3v3_upper.a
+    r_fb_3v3_upper.b ~ r_fb_3v3_lower.a
+    r_fb_3v3_lower.b ~ GND
+    r_fb_3v3_upper.b ~ buck_3v3.FB
+
+    # Enable signals (connected by protection module)
+    signal EN_5V
+    signal EN_3V3
+    buck_5v.EN ~ EN_5V
+    buck_3v3.EN ~ EN_3V3

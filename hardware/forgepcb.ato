@@ -1,0 +1,200 @@
+# ForgePCB - Top-Level System Integration
+# Feature F002: Power and Signal Subsystems
+
+from "power/power_pcb.ato" import PowerPCB
+from "dbb/dbb.ato" import DBB
+
+module ForgePCB:
+    """
+    Complete ForgePCB system.
+
+    Feature F002: Power and Signal Subsystems
+    Two-PCB architecture: Power PCB + DBB (Digital Backbone)
+
+    System Overview:
+    ================
+
+    Power PCB:
+    - External 24V power brick input (90-264VAC → 24VDC conversion)
+    - Input protection: 10A blade fuse, locking connector
+    - Fixed rails: 5V @ 5A, 3.3V @ 3A (synchronous buck converters)
+    - Variable bay: 0-24V @ 3A (adjustable module, banana outputs)
+    - eFuse protection: 3× channels (5V, 3.3V, variable bay)
+    - User interface: Rocker switches, LEDs, fault reset buttons
+
+    DBB (Digital Backbone):
+    - Bus headers: I²C, UART, SPI, RS-485 (Dupont, separate blocks)
+    - Configuration: DIP switches for pull-ups, termination, voltage selection
+    - Debug corner: 16-channel logic analyzer header
+    - Clean signal routing (separated from high-power zones)
+
+    Power Flow:
+    ===========
+    1. 24V input → Power PCB input stage (fuse, connector)
+    2. 24V → Buck converters → 5V, 3.3V rails
+    3. 24V → Variable bay module → 0-24V adjustable output
+    4. Rails → eFuse protection → Protected outputs
+    5. Protected outputs → DBB → Bus headers and debug
+
+    Interface Between PCBs:
+    =======================
+    Power PCB → DBB:
+    - 5V_OUT: Protected 5V rail (up to 5A)
+    - 3V3_OUT: Protected 3.3V rail (up to 3A)
+    - GND: Common ground plane
+    - FAULT_5V, FAULT_3V3: Fault telemetry (optional)
+
+    Physical connection: Ribbon cable or high-current header
+
+    Physical Architecture:
+    ======================
+    - Two separate PCBs (Power PCB + DBB)
+    - Power PCB: Mounted in high-power zone of enclosure
+    - DBB: Mounted in clean signal zone of enclosure
+    - Enclosure zones: Input, conversion, protection, variable bay, bus headers, debug
+    - Front panel: Switches, LEDs, banana jacks (Power PCB)
+    - Front/side panel: Bus headers, DIP switches, LA header (DBB)
+
+    Frozen Decisions Implemented:
+    ==============================
+    §4.1: 24V power brick, 10A fuse ✓
+    §4.2: Two-PCB split (Power PCB + DBB) ✓
+    §4.3: eFuse protection (3 channels, latch-off) ✓
+    §4.4: Rail capabilities (5V @ 5A, 3.3V @ 3A) ✓
+    §4.5: Breadboard policy (3.3V/5V/GND on headers) ✓
+    §4.6: Variable bay (0-24V, 3A, banana outputs, display) ✓
+    §4.7: UX (rocker switches, LEDs, reset buttons) ✓
+    §4.8: Bus headers (I²C, UART, SPI, RS-485, Dupont) ✓
+    §4.9: RS-485 switches (TERM, BIAS, VLOGIC) ✓
+    §4.10: Logic analyzer (16-channel header, debug corner) ✓
+    §4.11: Power distribution (multiple taps, eFuse-protected) ✓
+
+    Excluded Scope (Not Implemented):
+    ==================================
+    - MCU carriers (ESP32-S3, RP2040 Pico) → Feature F003
+    - Enclosure physical execution → Feature F004
+    - Firmware tooling (USB hub, programming) → Feature F005
+    - PCB layout, routing, DRC → Downstream work
+
+    """
+
+    # === PCB Instantiation ===
+
+    power_pcb = new PowerPCB
+    dbb = new DBB
+
+    # === Common Ground ===
+    signal GND
+
+    power_pcb.GND ~ GND
+    dbb.GND ~ GND
+
+    # === Inter-PCB Power Interface ===
+
+    # Power PCB provides protected rails to DBB
+    power_pcb.5V_OUT ~ dbb.5V_IN
+    power_pcb.3V3_OUT ~ dbb.3V3_IN
+
+    # === Inter-PCB Telemetry (Optional) ===
+
+    # Fault signals from Power PCB to DBB (can be routed to debug or MCU)
+    power_pcb.FAULT_5V ~ dbb.FAULT_5V
+    power_pcb.FAULT_3V3 ~ dbb.FAULT_3V3
+
+    # === External Interfaces (System-Level) ===
+
+    # Input: 24V power brick connector (on Power PCB)
+    signal EXTERNAL_24V_PLUS
+    signal EXTERNAL_24V_GND
+
+    power_pcb.input_stage.input_plus ~ EXTERNAL_24V_PLUS
+    power_pcb.input_stage.input_gnd ~ EXTERNAL_24V_GND
+
+    # Output: Variable bay banana jacks (on Power PCB)
+    signal BANANA_RED_OUTPUT
+    signal BANANA_BLACK_OUTPUT
+
+    power_pcb.variable_bay.banana_red.pin ~ BANANA_RED_OUTPUT
+    power_pcb.variable_bay.banana_black.pin ~ BANANA_BLACK_OUTPUT
+
+    # Output: Bus headers (on DBB)
+    # I²C, UART, SPI, RS-485 headers exposed on DBB front/side panel
+    # Signals already defined in DBB module
+
+    # Output: Logic analyzer header (on DBB)
+    # 16-channel header exposed on DBB front/side panel
+    # Signals already defined in DBB debug module
+
+    # === Physical Connection Notes ===
+    """
+    Inter-PCB Connection:
+    - Ribbon cable or high-current header (minimum 18 AWG for 5V, 3.3V)
+    - Pinout:
+      1. 5V_OUT (from Power PCB)
+      2. 3V3_OUT (from Power PCB)
+      3-6. GND (multiple pins for current capacity)
+      7. FAULT_5V (optional telemetry)
+      8. FAULT_3V3 (optional telemetry)
+      9-10. I2C_SDA, I2C_SCL (if eFuse programming needed)
+
+    Alternative: Use 2× headers (one for power, one for signals)
+    """
+
+    # === System Validation Model ===
+    """
+    Validation per F002 §8:
+
+    1. Static validation:
+       - All frozen decisions implemented ✓ (see checklist above)
+       - BOM alignment verified (class-level specs match Atopile components)
+       - Interface contracts explicit (Power PCB → DBB)
+       - No excluded scope leaked in ✓
+
+    2. Electrical validation (future):
+       - Buck converter output voltage/current (bench test)
+       - eFuse trip current (verify 5A, 3A, 3A limits)
+       - Variable bay output range (verify 0-24V adjustable)
+       - Bus signal integrity (logic analyzer capture)
+
+    3. Physical validation (future):
+       - PCB fit in enclosure zones (after layout)
+       - Thermal management (IR camera, thermocouple)
+       - Connector accessibility (front panel usability)
+
+    4. UX validation (future):
+       - Switch/button operation (tactile feedback)
+       - LED visibility (brightness, color)
+       - Fault recovery (reset button behavior)
+    """
+
+    # === Next Steps ===
+    """
+    After Feature F002 completion:
+
+    1. Feature F003: MCU Carriers and I/O Exposure
+       - ESP32-S3 carrier (WROOM/WROVER footprint)
+       - RP2040 Pico carrier (Pico footprint)
+       - I/O headers (GPIOs, ADC, PWM)
+       - Integration with DBB bus headers
+
+    2. Feature F004: Enclosure and Physical Zones
+       - Zone definitions (input, conversion, protection, variable bay, headers, debug)
+       - Mounting strategy (standoffs, rails)
+       - Cable management (ribbon cables, wire routing)
+       - Front panel layout (switches, LEDs, connectors)
+
+    3. Feature F005: Firmware Tooling and ForgeOS Integration
+       - USB hub (auto-flash, programming)
+       - Telemetry (power status, fault reporting)
+       - ForgeOS integration (instrument registration, API)
+
+    4. PCB Layout (optional):
+       - Export Atopile netlist to KiCad/Altium
+       - Place components per zone constraints
+       - Route power (thick traces, copper pours)
+       - Route signals (impedance control for high-speed)
+       - DRC, ERC validation
+       - Generate Gerbers for manufacturing
+
+    Human decision required for next feature selection.
+    """

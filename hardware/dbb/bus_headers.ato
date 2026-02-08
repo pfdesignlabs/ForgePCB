@@ -1,0 +1,215 @@
+# DBB - Bus Headers Module
+# Feature F002 §4.8: Dupont headers, separate blocks per bus
+
+module BusHeaders:
+    """
+    Standardized bus headers for protocol access.
+
+    Frozen Decision §4.8:
+    - Dupont-style headers (2.54mm pitch)
+    - Separate physical blocks per bus (no shared pins)
+    - Standard pinouts per protocol conventions
+
+    Supported Buses:
+    - I²C (1×6 header)
+    - UART (1×6 header)
+    - SPI (2×5 header for dual peripheral support)
+    - RS-485 (1×6 header)
+
+    Interface:
+    - Input: 5V_IN, 3V3_IN, GND (from Power PCB)
+    - Output: Headers expose bus signals + power pins
+    """
+
+    # Power inputs
+    signal 5V_IN
+    signal 3V3_IN
+    signal GND
+
+    # ===== I²C Header (1×6) =====
+    component i2c_header:
+        """
+        I²C bus header (1×6 Dupont).
+
+        Pinout:
+        1. GND
+        2. VCC (3.3V or 5V, selectable via jumper/switch in switches module)
+        3. SDA
+        4. SCL
+        5. NC (reserved)
+        6. NC (reserved)
+
+        Note: Pull-ups configured via DIP switches (switches module).
+        """
+        footprint = "PinHeader_1x06_P2.54mm_Vertical"
+        designator = "J4"
+
+        signal pin1  # GND
+        signal pin2  # VCC
+        signal pin3  # SDA
+        signal pin4  # SCL
+        signal pin5  # NC
+        signal pin6  # NC
+
+    signal I2C_SDA
+    signal I2C_SCL
+    signal I2C_VCC  # From switches module (3.3V or 5V selection)
+
+    i2c_header.pin1 ~ GND
+    i2c_header.pin2 ~ I2C_VCC
+    i2c_header.pin3 ~ I2C_SDA
+    i2c_header.pin4 ~ I2C_SCL
+
+    # ===== UART Header (1×6) =====
+    component uart_header:
+        """
+        UART bus header (1×6 Dupont).
+
+        Pinout:
+        1. GND
+        2. VCC (3.3V or 5V, selectable)
+        3. TX (transmit from DUT perspective)
+        4. RX (receive from DUT perspective)
+        5. CTS (clear to send, optional)
+        6. RTS (request to send, optional)
+
+        Note: Voltage level selection via jumper (3.3V/5V logic).
+        """
+        footprint = "PinHeader_1x06_P2.54mm_Vertical"
+        designator = "J5"
+
+        signal pin1  # GND
+        signal pin2  # VCC
+        signal pin3  # TX
+        signal pin4  # RX
+        signal pin5  # CTS
+        signal pin6  # RTS
+
+    signal UART_TX
+    signal UART_RX
+    signal UART_CTS
+    signal UART_RTS
+    signal UART_VCC
+
+    uart_header.pin1 ~ GND
+    uart_header.pin2 ~ UART_VCC
+    uart_header.pin3 ~ UART_TX
+    uart_header.pin4 ~ UART_RX
+    uart_header.pin5 ~ UART_CTS
+    uart_header.pin6 ~ UART_RTS
+
+    # ===== SPI Header (2×5) =====
+    component spi_header:
+        """
+        SPI bus header (2×5 Dupont).
+
+        Pinout (2×5 dual-row):
+        Row 1:
+        1. GND
+        2. MOSI (main out, sub in)
+        3. MISO (main in, sub out)
+        4. SCK (clock)
+        5. CS0 (chip select 0)
+
+        Row 2:
+        6. VCC (3.3V or 5V)
+        7. MOSI (duplicate for convenience)
+        8. MISO (duplicate)
+        9. SCK (duplicate)
+        10. CS1 (chip select 1, optional second peripheral)
+
+        Note: Dual-row allows two SPI peripherals with shared bus.
+        """
+        footprint = "PinHeader_2x05_P2.54mm_Vertical"
+        designator = "J6"
+
+        signal pin1   # GND
+        signal pin2   # MOSI
+        signal pin3   # MISO
+        signal pin4   # SCK
+        signal pin5   # CS0
+        signal pin6   # VCC
+        signal pin7   # MOSI
+        signal pin8   # MISO
+        signal pin9   # SCK
+        signal pin10  # CS1
+
+    signal SPI_MOSI
+    signal SPI_MISO
+    signal SPI_SCK
+    signal SPI_CS0
+    signal SPI_CS1
+    signal SPI_VCC
+
+    spi_header.pin1 ~ GND
+    spi_header.pin2 ~ SPI_MOSI
+    spi_header.pin3 ~ SPI_MISO
+    spi_header.pin4 ~ SPI_SCK
+    spi_header.pin5 ~ SPI_CS0
+    spi_header.pin6 ~ SPI_VCC
+    spi_header.pin7 ~ SPI_MOSI
+    spi_header.pin8 ~ SPI_MISO
+    spi_header.pin9 ~ SPI_SCK
+    spi_header.pin10 ~ SPI_CS1
+
+    # ===== RS-485 Header (1×6) =====
+    component rs485_header:
+        """
+        RS-485 bus header (1×6 Dupont).
+
+        Pinout:
+        1. GND
+        2. VLOGIC (3.3V or 5V, selectable via DIP switch)
+        3. A (differential pair positive)
+        4. B (differential pair negative)
+        5. NC (reserved for bias resistor tap)
+        6. NC (reserved for termination resistor tap)
+
+        Note:
+        - Termination (120Ω) configured via DIP switch (switches module).
+        - Bias resistors configured via DIP switch (switches module).
+        - VLOGIC selection (3.3V/5V) via DIP switch (switches module).
+        """
+        footprint = "PinHeader_1x06_P2.54mm_Vertical"
+        designator = "J7"
+
+        signal pin1  # GND
+        signal pin2  # VLOGIC
+        signal pin3  # A
+        signal pin4  # B
+        signal pin5  # NC
+        signal pin6  # NC
+
+    signal RS485_A
+    signal RS485_B
+    signal RS485_VLOGIC  # From switches module
+
+    rs485_header.pin1 ~ GND
+    rs485_header.pin2 ~ RS485_VLOGIC
+    rs485_header.pin3 ~ RS485_A
+    rs485_header.pin4 ~ RS485_B
+
+    # ===== VCC Selection Signals (from switches module) =====
+    """
+    I2C_VCC, UART_VCC, SPI_VCC, RS485_VLOGIC are controlled by
+    DIP switches or jumpers in the switches module.
+
+    Default strategy: Use 3.3V for modern devices, 5V for legacy.
+    User can reconfigure via switches without rewiring.
+    """
+
+    # === Interface Notes ===
+    """
+    All headers are Dupont-style (2.54mm pitch) for easy jumper wire connections.
+    Separate physical blocks ensure no pin conflicts.
+    Power pins (VCC) are selectable per bus (3.3V/5V).
+    """
+
+    # === Frozen Decision Compliance ===
+    """
+    §4.8: Dupont headers, separate blocks per bus ✓
+    - I²C: 1×6 header with SDA, SCL, VCC, GND
+    - UART: 1×6 header with TX, RX, CTS, RTS, VCC, GND
+    - SPI: 2×5 header with MOSI, MISO, SCK, CS0, CS1, VCC, GND
+    - RS-485: 1×6 header with A, B, VLOGIC, GND
+    """

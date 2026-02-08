@@ -1,0 +1,45 @@
+# ForgePCB Atopile Project Configuration
+# Feature F002: Power and Signal Subsystems
+# Authoritative electrical architecture definition
+
+ato-version: ^0.2.0
+
+name: forgepcb
+version: 0.1.0
+description: >
+  ForgePCB complete PCB prototyping instrument.
+  Two-PCB architecture: Power PCB + DBB (Digital Backbone).
+  Safe, debug-first lab instrument with eFuse protection,
+  clean fixed rails (3.3V, 5V), variable power bay (0-24V, 3A),
+  and standardized bus access (I²C, UART, SPI, RS-485).
+
+authors:
+  - name: PF Design Labs
+    email: pfdesignlabs@example.com
+
+entry: forgepcb.ato
+
+dependencies: {}
+
+# Build configuration
+builds:
+  default:
+    entry: forgepcb.ato
+    output: build/
+
+# Physical constraints (for future layout)
+constraints:
+  two_pcb_architecture: true
+  power_pcb:
+    max_size: TBD
+    zones:
+      - input_protection
+      - conversion
+      - efuse_protection
+      - variable_bay
+  dbb:
+    max_size: TBD
+    zones:
+      - bus_headers
+      - configuration
+      - debug_corner

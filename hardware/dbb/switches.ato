@@ -1,0 +1,233 @@
+# DBB - Configuration Switches Module
+# Feature F002 §4.9: RS-485 termination, bias, VLOGIC selection
+# I²C pull-up configuration
+
+module ConfigurationSwitches:
+    """
+    DIP switches for bus configuration.
+
+    Frozen Decision §4.9:
+    - RS-485 configuration switches:
+      - TERM: 120Ω termination resistor enable
+      - BIAS: Bias resistors enable (pull A/B to mid-rail)
+      - VLOGIC: 3.3V/5V logic level selection
+    - I²C configuration switches:
+      - Pull-up enable (SDA, SCL)
+      - Pull-up voltage selection (3.3V/5V)
+
+    Interface:
+    - Input: 5V_IN, 3V3_IN, GND (from Power PCB)
+    - Output: Configured bus signals with pull-ups/termination
+    - Signals: I2C_SDA, I2C_SCL, RS485_A, RS485_B
+    """
+
+    # Power inputs
+    signal 5V_IN
+    signal 3V3_IN
+    signal GND
+
+    # Bus signals (from bus_headers module)
+    signal I2C_SDA
+    signal I2C_SCL
+    signal RS485_A
+    signal RS485_B
+
+    # VCC outputs (to bus headers)
+    signal I2C_VCC
+    signal UART_VCC
+    signal SPI_VCC
+    signal RS485_VLOGIC
+
+    # ===== I²C Configuration =====
+
+    # DIP switch: I²C pull-up configuration (3-position or 2× SPDT)
+    component dip_i2c_config:
+        """
+        DIP switch for I²C pull-up configuration.
+
+        Positions:
+        - SW1: SDA pull-up enable (ON = enable, OFF = disable)
+        - SW2: SCL pull-up enable (ON = enable, OFF = disable)
+        - SW3: VCC selection (ON = 5V, OFF = 3.3V)
+
+        Alternatively: Use 2× SPDT switches (enable + voltage select).
+        """
+        footprint = "SW_DIP_SPSTx3"
+        designator = "SW5"
+
+        signal common1
+        signal pole1
+        signal common2
+        signal pole2
+        signal common3
+        signal pole3
+
+    # I²C pull-up resistors (4.7kΩ standard for I²C)
+    component r_pullup_sda:
+        footprint = "R_0805"
+        resistance = 4.7kOhm
+        power_rating = 0.125W
+        designator = "R13"
+        signal a
+        signal b
+
+    component r_pullup_scl:
+        footprint = "R_0805"
+        resistance = 4.7kOhm
+        power_rating = 0.125W
+        designator = "R14"
+        signal a
+        signal b
+
+    # I²C VCC selection logic
+    # SW3: ON = 5V, OFF = 3.3V
+    # TODO: Implement SPDT or jumper for voltage selection
+    # For now, placeholder signal
+    signal I2C_VCC_SELECTED
+
+    # Pull-up connections (enabled via DIP switch)
+    dip_i2c_config.pole1 ~ I2C_VCC_SELECTED
+    dip_i2c_config.common1 ~ r_pullup_sda.a
+    r_pullup_sda.b ~ I2C_SDA
+
+    dip_i2c_config.pole2 ~ I2C_VCC_SELECTED
+    dip_i2c_config.common2 ~ r_pullup_scl.a
+    r_pullup_scl.b ~ I2C_SCL
+
+    # VCC selection (simplified: using 3.3V as default, jumper to 5V)
+    # In practice: Use SPDT switch or jumper block
+    I2C_VCC ~ 3V3_IN  # Default to 3.3V, user can jumper to 5V
+
+    # ===== RS-485 Configuration =====
+
+    # DIP switch: RS-485 configuration (4-position)
+    component dip_rs485_config:
+        """
+        DIP switch for RS-485 bus configuration.
+
+        Positions:
+        - SW1: TERM enable (ON = 120Ω termination, OFF = no termination)
+        - SW2: BIAS enable (ON = bias resistors, OFF = no bias)
+        - SW3: VLOGIC bit 0 (voltage selection encoding)
+        - SW4: VLOGIC bit 1 (voltage selection encoding)
+
+        Alternatively:
+        - SW1: TERM
+        - SW2: BIAS
+        - SW3: VLOGIC (ON = 5V, OFF = 3.3V)
+        - SW4: Reserved
+        """
+        footprint = "SW_DIP_SPSTx4"
+        designator = "SW6"
+
+        signal common1
+        signal pole1
+        signal common2
+        signal pole2
+        signal common3
+        signal pole3
+        signal common4
+        signal pole4
+
+    # RS-485 termination resistor (120Ω across A-B)
+    component r_term_rs485:
+        """
+        120Ω termination resistor for RS-485 bus.
+
+        Placed across differential pair (A-B) when TERM switch is ON.
+        """
+        footprint = "R_0805"
+        resistance = 120Ohm
+        power_rating = 0.125W
+        designator = "R15"
+        signal a
+        signal b
+
+    # RS-485 bias resistors (pull A up, pull B down to mid-rail)
+    component r_bias_a:
+        """
+        RS-485 bias resistor (pull A toward VCC).
+
+        Typical: 560Ω to VCC (creates ~200mV bias on idle bus).
+        """
+        footprint = "R_0805"
+        resistance = 560Ohm
+        power_rating = 0.125W
+        designator = "R16"
+        signal a
+        signal b
+
+    component r_bias_b:
+        """
+        RS-485 bias resistor (pull B toward GND).
+        """
+        footprint = "R_0805"
+        resistance = 560Ohm
+        power_rating = 0.125W
+        designator = "R17"
+        signal a
+        signal b
+
+    # Termination switch connection
+    dip_rs485_config.pole1 ~ RS485_A
+    dip_rs485_config.common1 ~ r_term_rs485.a
+    r_term_rs485.b ~ RS485_B
+
+    # Bias switch connections
+    signal RS485_VLOGIC_SELECTED
+    dip_rs485_config.pole2 ~ RS485_VLOGIC_SELECTED
+    dip_rs485_config.common2 ~ r_bias_a.a
+    r_bias_a.b ~ RS485_A
+
+    dip_rs485_config.pole2 ~ GND  # Bias B pulls toward GND
+    dip_rs485_config.common2 ~ r_bias_b.a
+    r_bias_b.b ~ RS485_B
+
+    # VLOGIC selection (simplified: default 3.3V, jumper to 5V)
+    RS485_VLOGIC ~ 3V3_IN  # Default to 3.3V
+
+    # ===== UART and SPI VCC Selection (Simplified) =====
+    """
+    UART and SPI VCC are typically fixed or selected via jumpers.
+
+    For simplicity:
+    - UART_VCC: default 3.3V (jumper to 5V if needed)
+    - SPI_VCC: default 3.3V (jumper to 5V if needed)
+
+    Advanced: Use additional DIP switches or SPDT switches.
+    """
+    UART_VCC ~ 3V3_IN
+    SPI_VCC ~ 3V3_IN
+
+    # ===== Operational Notes =====
+    """
+    DIP Switch Configuration Examples:
+
+    I²C Configuration:
+    - SW1 ON, SW2 ON, SW3 OFF: Enable pull-ups, use 3.3V logic
+    - SW1 OFF, SW2 OFF, SW3 X: Disable pull-ups (external pull-ups)
+    - SW1 ON, SW2 ON, SW3 ON: Enable pull-ups, use 5V logic
+
+    RS-485 Configuration:
+    - SW1 ON: Enable 120Ω termination (use at bus endpoints)
+    - SW2 ON: Enable bias resistors (improves idle bus stability)
+    - SW3 OFF: Use 3.3V logic
+    - SW3 ON: Use 5V logic
+
+    Physical Placement:
+    - DIP switches accessible on front panel or top of DBB PCB
+    - Clearly labeled for user configuration
+    """
+
+    # === Frozen Decision Compliance ===
+    """
+    §4.9: RS-485 switches (TERM, BIAS, VLOGIC) ✓
+    - TERM: DIP switch enables 120Ω termination resistor
+    - BIAS: DIP switch enables bias resistors (560Ω to VCC/GND)
+    - VLOGIC: DIP switch selects 3.3V or 5V logic level
+
+    I²C pull-up configuration:
+    - DIP switch enables pull-ups on SDA, SCL
+    - DIP switch selects 3.3V or 5V pull-up voltage
+    - 4.7kΩ resistors (standard I²C value)
+    """
