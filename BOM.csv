@@ -1,0 +1,36 @@
+Category,Item,Specification,Qty,Notes
+Power,External PSU,24V 10A ~240W,1,External brick
+Power PCB,DC Inlet,Locking DC connector >=10A,1,Panel mount
+Power PCB,Fuse Holder,Blade ATO/ATC,1,
+Power PCB,Fuse,10A blade,1,
+Power PCB,Buck Converter,24V->5V 5A,1,
+Power PCB,Buck Converter,24V->3.3V 3A,1,
+Power PCB,eFuse,Programmable latch-off channel,3,5V / 3.3V / Variable
+Power PCB,Rocker Switch,eFuse enable,2,
+Power PCB,Push Button,Fault reset,2,
+Power PCB,LED,Rail ON,2,
+Power PCB,LED,FAULT,3,5V / 3.3V / Variable
+Power Bay,Variable DC-DC,0-24V >=3A w/ display and enable,1,
+Power Bay,Banana Jacks,Red + Black,2,Pair
+DBB,Header,I2C 1x6 2.54mm,1,
+DBB,Header,UART 1x6 2.54mm,1,
+DBB,Header,SPI 2x5 2.54mm,1,
+DBB,Header,RS-485 1x6 2.54mm,1,
+DBB,Header,Logic Analyzer 2x12 2.54mm,1,16ch + GND strategy
+DBB,DIP Switch,Config banks,2,I2C and RS-485
+DBB,Passives,Pull-ups/termination/bias,1,Footprints populated as needed
+DBB,Protection,TVS footprint optional,1,Optional populate
+Carriers,PCB,80x120mm,2,ESP32-S3 + RP2040
+Carriers,Dupont Headers,GPIO bank (16),2,Per carrier
+Carriers,Screw Terminals,GPIO terminals + GND,1,set depends on pitch
+USB,USB Hub,4-port internal module,1,
+Debug,Logic Analyzer,16ch external dongle,1,
+Mechanical,Steel Plate,Embedded isolated,1,
+Mechanical,Isolation Sheet,PET/FR4,1,
+Mechanical,Magnetic Mat,Printer-bed style,1,
+Mechanical,2020 Extrusion,Rear + sides,3,Lengths to be defined in CAD
+Mechanical,Heat-set Inserts,M3,20,Estimate
+Mechanical,Fasteners,M3 screws/standoffs,set,
+Wiring,Ferrules,Assorted sizes,set,
+Wiring,Power Wire,16-18 AWG,set,
+Wiring,Dupont Wires,Assorted,set
