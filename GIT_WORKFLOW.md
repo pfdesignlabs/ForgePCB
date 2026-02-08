@@ -2,11 +2,14 @@
 
 ## Overview
 
-ForgePCB follows a **hierarchical branching model** to ensure traceability, review, and clean separation between development and stable releases.
+ForgePCB follows a **hierarchical branching model** with **Pull Request (PR) based merges** to ensure traceability, review, and clean separation between development and stable releases.
 
 ```
 work-item/WI-XXX → feature/fXXX-name → develop → main
+     (PR)              (PR)              (PR)
 ```
+
+**Critical Rule:** All merges between branches MUST go through Pull Requests on GitHub. Direct command-line merges are NOT allowed.
 
 ---
 
@@ -20,9 +23,11 @@ work-item/WI-XXX → feature/fXXX-name → develop → main
 
 **Rules:**
 - Never commit directly to `main`
-- Only merge from `develop` when a sprint/feature is complete
-- All merges use `--no-ff` (non-fast-forward) to preserve history
-- Tag releases: `git tag -a v0.1.0 -m "Release SPRINT_002"`
+- Never merge directly via command line
+- Only merge from `develop` via Pull Request when sprint/feature is complete
+- All PRs require review and approval before merge
+- GitHub will automatically use `--no-ff` (non-fast-forward) to preserve history
+- Tag releases after PR merge: `git tag -a v0.1.0 -m "Release SPRINT_002"`
 
 ---
 
@@ -34,9 +39,10 @@ work-item/WI-XXX → feature/fXXX-name → develop → main
 
 **Rules:**
 - Never commit directly to `develop`
-- Only merge completed feature branches
-- Feature branches must have all work items complete and validated
-- Use `--no-ff` merges for traceability
+- Never merge directly via command line
+- Only merge completed feature branches via Pull Request
+- Feature branches must have all work items complete and validated before PR
+- All PRs require review and approval before merge
 
 ---
 
@@ -48,17 +54,19 @@ work-item/WI-XXX → feature/fXXX-name → develop → main
 
 **Lifecycle:**
 1. Branch from `develop`: `git checkout -b feature/f002-power-signal-subsystems develop`
-2. Merge work item branches as they complete
-3. When all work items done: validate feature per closure conditions
-4. Merge to `develop`: `git checkout develop && git merge --no-ff feature/f002-power-signal-subsystems`
-5. Push to remote: `git push origin feature/f002-power-signal-subsystems`
-6. Optionally delete after merge: `git branch -d feature/f002-power-signal-subsystems`
+2. Push to remote: `git push -u origin feature/f002-power-signal-subsystems`
+3. Merge work item branches as they complete (via PR or direct if same developer)
+4. When all work items done: validate feature per closure conditions
+5. Create Pull Request: `feature/f002-power-signal-subsystems` → `develop`
+6. Review and approve PR on GitHub
+7. Merge PR via GitHub interface (squash or merge commit)
+8. Delete feature branch after merge (via GitHub or locally)
 
 **Rules:**
 - One feature branch per Feature (F002, F003, etc.)
 - All work items for that feature merge here first
-- Feature branch stays alive until merged to `develop`
-- Use `--no-ff` when merging work item branches
+- Feature branch stays alive until PR is merged to `develop`
+- Work item → feature merges can be direct (same developer) or via PR (team review)
 
 ---
 
@@ -154,6 +162,107 @@ Feature F002 is now frozen and ready for downstream work.
 
 ---
 
+## Pull Request Process
+
+All merges between protected branches (`main`, `develop`, `feature/*`) MUST use Pull Requests.
+
+### Creating a Pull Request
+
+**Option 1: GitHub Web Interface**
+1. Push your branch to remote: `git push origin <branch-name>`
+2. Go to https://github.com/pfdesignlabs/ForgePCB
+3. Click "Compare & pull request" banner (appears automatically)
+4. Select base branch (target) and compare branch (source)
+5. Fill in PR title and description (see template below)
+6. Click "Create pull request"
+
+**Option 2: GitHub CLI** (recommended for automation)
+```bash
+gh pr create --base <target-branch> --head <source-branch> \
+  --title "Your PR title" \
+  --body "Your PR description"
+```
+
+### PR Title Format
+
+```
+<Type>: <Brief description (max 72 chars)>
+```
+
+**Types:**
+- `SPRINT_XXX:` — Feature implementation (e.g., `SPRINT_003: Feature F003 complete`)
+- `Hotfix:` — Emergency fix to main
+- `Docs:` — Documentation updates
+- `Refactor:` — Code refactoring without feature changes
+- `Fix:` — Bug fix in development
+
+**Examples:**
+- `SPRINT_003: Feature F003 (MCU Carriers and I/O Exposure)`
+- `Hotfix: Correct critical BOM error`
+- `Docs: Update Git workflow with PR requirements`
+- `Fix: Correct RS-485 termination resistor value`
+
+### PR Description Template
+
+```markdown
+## Summary
+<1-2 sentence summary of what this PR does>
+
+## Changes
+- <Bullet list of key changes>
+- <Component additions/modifications>
+- <Interface updates>
+
+## Validation
+- [ ] All frozen decisions implemented (if feature PR)
+- [ ] BOM alignment verified (if hardware changes)
+- [ ] Interface contracts explicit (if architecture changes)
+- [ ] No regressions introduced
+- [ ] Documentation updated (if needed)
+
+## Closes
+- Work items: WI-XXX through WI-YYY (if feature PR)
+- Issue: #XXX (if fixing a tracked issue)
+
+## Notes
+<Any additional context, decisions made, or follow-up work>
+```
+
+### PR Review Process
+
+**Reviewer Checklist:**
+1. **Code Quality**
+   - [ ] Atopile syntax is valid
+   - [ ] Component specifications match BOM requirements
+   - [ ] Comments are clear and reference frozen decisions where applicable
+
+2. **Architecture**
+   - [ ] Changes align with feature frozen decisions
+   - [ ] No excluded scope has leaked in
+   - [ ] Interface contracts are explicit and documented
+
+3. **Governance**
+   - [ ] Changes follow CLAUDE.md execution rules
+   - [ ] Work items are properly completed (if feature PR)
+   - [ ] Decision log updated (if architectural changes)
+
+4. **Documentation**
+   - [ ] Status files updated (INDEX.md, NEXT.md)
+   - [ ] ACTIVE_SLICE.md reflects current state (if applicable)
+   - [ ] New modules have adequate inline comments
+
+**Approval:**
+- At least 1 approval required for `develop` merges
+- At least 1 approval required for `main` merges (release)
+- Hotfixes may bypass review in true emergencies (document in PR)
+
+**Merge Strategy:**
+- Use "Merge commit" (preserves full history, non-fast-forward)
+- Avoid "Squash and merge" for feature PRs (loses work item granularity)
+- "Squash and merge" acceptable for small docs/hotfix PRs
+
+---
+
 ## Workflow Examples
 
 ### Example 1: Starting a New Sprint (F003 — MCU Carriers)
@@ -208,27 +317,59 @@ git branch -d work-item/WI-021-esp32-carrier
 # 5. When all work items complete, validate feature
 # (run validation checklist per feature closure conditions)
 
-# 6. Merge feature to develop
-git checkout develop
-git merge --no-ff feature/f003-mcu-carriers -m "Merge feature/f003-mcu-carriers into develop
-
-SPRINT_003 complete: Feature F003 (MCU Carriers and I/O Exposure)
-All work items WI-020 through WI-0XX implemented and validated."
-
-git push origin develop
-
-# 7. Optionally push feature branch for transparency
+# 6. Push feature branch (if not already pushed)
 git push origin feature/f003-mcu-carriers
 
-# 8. Release to main (when ready)
+# 7. Create Pull Request: feature/f003-mcu-carriers → develop
+# Go to GitHub: https://github.com/pfdesignlabs/ForgePCB/compare/develop...feature/f003-mcu-carriers
+# Or use GitHub CLI:
+gh pr create --base develop --head feature/f003-mcu-carriers \
+  --title "SPRINT_003: Feature F003 (MCU Carriers and I/O Exposure)" \
+  --body "## Summary
+SPRINT_003 complete: All work items WI-020 through WI-0XX implemented and validated.
+
+## Changes
+- ESP32-S3 carrier module implemented
+- RP2040 Pico carrier module implemented
+- GPIO headers and I/O exposure defined
+- Integration with DBB bus headers complete
+
+## Validation
+- All frozen decisions implemented ✓
+- BOM alignment verified ✓
+- Interface contracts explicit ✓
+
+## Closes
+- Work items: WI-020 through WI-0XX"
+
+# 8. Review PR, get approval, then merge via GitHub interface
+# After merge, pull latest develop locally:
+git checkout develop
+git pull origin develop
+
+# 9. Delete feature branch (locally and remotely)
+git branch -d feature/f003-mcu-carriers
+git push origin --delete feature/f003-mcu-carriers
+
+# 10. When ready for release: Create PR develop → main
+gh pr create --base main --head develop \
+  --title "Release SPRINT_003: Feature F003 complete" \
+  --body "## Release Notes
+Feature F003 (MCU Carriers and I/O Exposure) complete.
+
+## Includes
+- ESP32-S3 carrier support
+- RP2040 Pico carrier support
+- GPIO headers and I/O exposure
+
+Ready for PCB layout and firmware integration."
+
+# 11. Review release PR, get approval, merge via GitHub
+# After merge, pull latest main locally:
 git checkout main
-git merge --no-ff develop -m "Release SPRINT_003: Feature F003 (MCU Carriers) complete
+git pull origin main
 
-... release notes ..."
-
-git push origin main
-
-# 9. Tag release
+# 12. Tag release
 git tag -a v0.2.0 -m "Release: F002 + F003 complete"
 git push origin v0.2.0
 ```
@@ -242,6 +383,7 @@ For critical fixes that can't wait for the next sprint:
 ```bash
 # 1. Branch from main
 git checkout main
+git pull origin main
 git checkout -b hotfix/fix-critical-bom-error
 
 # 2. Make fix
@@ -253,17 +395,33 @@ per F002 frozen decision §4.1.
 
 Hotfix: Critical BOM correction"
 
-# 3. Merge to main
-git checkout main
-git merge --no-ff hotfix/fix-critical-bom-error
-git push origin main
+# 3. Push hotfix branch
+git push -u origin hotfix/fix-critical-bom-error
 
-# 4. Also merge to develop (keep in sync)
-git checkout develop
-git merge --no-ff hotfix/fix-critical-bom-error
-git push origin develop
+# 4. Create PR: hotfix → main
+gh pr create --base main --head hotfix/fix-critical-bom-error \
+  --title "Hotfix: Correct critical BOM error" \
+  --body "## Issue
+Fuse rating in BOM.csv was incorrectly specified as 5A.
 
-# 5. Delete hotfix branch
+## Fix
+Corrected to 10A per F002 frozen decision §4.1.
+
+## Impact
+Critical - affects part ordering and safety compliance."
+
+# 5. Review and merge PR to main via GitHub
+
+# 6. Also apply to develop (keep in sync)
+# Create second PR: hotfix → develop
+gh pr create --base develop --head hotfix/fix-critical-bom-error \
+  --title "Hotfix: Correct critical BOM error (backport to develop)" \
+  --body "Backport of hotfix from main to keep develop in sync."
+
+# 7. Review and merge PR to develop via GitHub
+
+# 8. After both PRs merged, delete hotfix branch
+git push origin --delete hotfix/fix-critical-bom-error
 git branch -d hotfix/fix-critical-bom-error
 ```
 
