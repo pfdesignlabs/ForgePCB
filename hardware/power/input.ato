@@ -1,0 +1,76 @@
+# Power PCB - Input Protection and Distribution Module
+# Feature F002 §4.1: 24V external power brick, 10A blade fuse
+
+from "generics/interfaces.ato" import Power
+
+module PowerInput:
+    """
+    Input stage for Power PCB.
+
+    Frozen Decision §4.1:
+    - External 24V power brick (90-264VAC → 24VDC conversion)
+    - Locking DC panel connector (≥10A @ 24V rating)
+    - 10A blade fuse (ATO/ATC automotive style)
+    - Input protection and distribution to downstream converters
+
+    Interface:
+    - Output: 24V_IN rail (feeds buck converters and variable bay)
+    """
+
+    # Input connector - locking DC barrel/panel mount
+    # Spec: ≥10A @ 24V, locking mechanism, panel mount
+    # Candidate: Kycon KLDX-0202-xC series or equivalent
+    signal input_plus  # 24V from power brick
+    signal input_gnd   # Ground return
+
+    component input_connector:
+        footprint = "BarrelJack_Locking_10A"
+        mpn = "TBD"  # Select during layout: locking DC connector ≥10A
+        designator = "J1"
+
+        # Pins
+        signal pin_plus
+        signal pin_gnd
+
+    # Blade fuse holder and fuse
+    # Spec: 10A ATO/ATC automotive blade fuse
+    component fuse_holder:
+        footprint = "FuseHolder_Blade_ATO_ATC"
+        mpn = "TBD"  # Select during layout: panel-mount or PCB-mount blade holder
+        designator = "F1"
+
+        signal in
+        signal out
+
+    component fuse:
+        type = "fuse"
+        rating = 10A
+        voltage_rating = 32V
+        fuse_type = "blade_ATO"
+        designator = "F1_FUSE"
+
+    # Input bulk capacitor (transient suppression)
+    component input_cap:
+        footprint = "CP_Radial_D10.0mm_P5.00mm"
+        capacitance = 470uF
+        voltage_rating = 35V
+        type = "electrolytic"
+        designator = "C1"
+
+        signal plus
+        signal minus
+
+    # Power distribution rail
+    signal 24V_IN  # Primary 24V rail to converters
+    signal GND     # Ground plane
+
+    # Connections
+    input_plus ~ input_connector.pin_plus
+    input_gnd ~ input_connector.pin_gnd
+
+    input_connector.pin_plus ~ fuse_holder.in
+    fuse_holder.out ~ 24V_IN
+
+    input_cap.plus ~ 24V_IN
+    input_cap.minus ~ GND
+    input_gnd ~ GND
