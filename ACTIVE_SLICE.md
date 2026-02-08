@@ -1,23 +1,26 @@
 # ACTIVE_SLICE.md — Current Active Slice
 
 ## Objective
-Bootstrap ForgePCB execution and Git topology:
-- Features F001–F005 are authoritative and frozen
-- ForgePCB repository exists as source of truth
-- ForgeOS consumes ForgePCB via subtree at components/forgepcb/
-- Ready for Claude Code to derive and execute work items safely
+Implement Feature F003 — MCU Carriers and I/O Exposure:
+- Define canonical carrier modules for ESP32-S3 DevKit and RP2040 Pico
+- Controlled I/O exposure via Dupont headers and screw terminals
+- Rigid USB alignment and carrier mechanical envelope
+- Canonical GPIO labeling policy
+- Integration with ForgePCB power rails (5V, 3.3V, GND)
 
 ## In Scope Now
-- Repository creation and Git initialization for ForgePCB
-- Subtree integration into ForgeOS
-- Governance text updates related to Git topology
-- Preparation for Atopile work (no PCB layout/routing)
+- MCU carrier Atopile module implementation
+- ESP32-S3 DevKit class carrier (tray, USB, GPIO, controls)
+- RP2040 Pico footprint carrier (tray, USB, GPIO, controls)
+- GPIO exposure: 16× Dupont + 8× screw terminals
+- Carrier envelope: 80×120 mm with M3 mounting
+- Integration with Power PCB and DBB
 
 ## Out of Scope Now
 - PCB routing and layout
-- Purchasing and assembly
 - Firmware implementation
-- Telemetry v0.2 work
+- Universal "fits anything" carriers
+- Extra test pads for logic analyzer (DBB handles this)
 
 ## Stop Conditions
 Stop and log a decision if:
