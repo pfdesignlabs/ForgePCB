@@ -10,11 +10,12 @@ ForgePCB
 See: `/ACTIVE_SLICE.md`
 
 ## Current Focus
-- Git topology: ForgePCB repo + ForgeOS subtree integration
-- Claude Code to derive work items and propose sprint(s)
+- SPRINT_001 COMPLETE: Git topology bootstrap finished
+- ForgePCB is now version controlled and integrated with ForgeOS
+- Ready for Feature implementation work (F002-F005)
 
 ## Blocking Items
-- None recorded (bootstrap)
+- None
 
 ## Latest Decisions
 - See `/decisions/DECISIONS.md`
