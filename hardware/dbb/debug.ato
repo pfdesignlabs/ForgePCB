@@ -1,0 +1,190 @@
+# DBB - Debug Corner Module (Logic Analyzer)
+# Feature F002 §4.10: 16-channel logic analyzer header
+
+module DebugCorner:
+    """
+    Logic analyzer connection header.
+
+    Frozen Decision §4.10:
+    - 16-channel logic analyzer header
+    - Dedicated debug corner (physical zone separation)
+    - 2×12 Dupont header (16 channels + grounds)
+    - Compatible with standard LA dongles (Saleae, DSLogic, etc.)
+
+    Interface:
+    - Input: GND (from Power PCB)
+    - Signals: 16× debug channels (CH0-CH15)
+    - Output: Header exposes channels to external LA
+
+    Physical Placement:
+    - Dedicated debug corner on DBB PCB
+    - Away from high-power zones (clean signals)
+    - Clearly labeled for probe connection
+    """
+
+    # Ground reference
+    signal GND
+
+    # 16 debug channels
+    signal CH0
+    signal CH1
+    signal CH2
+    signal CH3
+    signal CH4
+    signal CH5
+    signal CH6
+    signal CH7
+    signal CH8
+    signal CH9
+    signal CH10
+    signal CH11
+    signal CH12
+    signal CH13
+    signal CH14
+    signal CH15
+
+    # Logic analyzer header (2×12 Dupont)
+    component la_header:
+        """
+        Logic analyzer header (2×12 Dupont, 2.54mm pitch).
+
+        Pinout (dual-row):
+        Row 1:
+        1.  CH0
+        2.  CH1
+        3.  CH2
+        4.  CH3
+        5.  CH4
+        6.  CH5
+        7.  CH6
+        8.  CH7
+        9.  CH8
+        10. CH9
+        11. CH10
+        12. CH11
+
+        Row 2:
+        13. CH12
+        14. CH13
+        15. CH14
+        16. CH15
+        17. GND
+        18. GND
+        19. GND
+        20. GND
+        21. GND
+        22. GND
+        23. GND
+        24. GND
+
+        Note: Row 2 pins 17-24 are all GND for clean return paths.
+        Standard LA dongles expect interleaved or grouped grounds.
+
+        Compatible with:
+        - Saleae Logic (8/16 channel)
+        - DSLogic series
+        - Generic 16-channel LA probes
+        """
+        footprint = "PinHeader_2x12_P2.54mm_Vertical"
+        designator = "J8"
+
+        signal pin1   # CH0
+        signal pin2   # CH1
+        signal pin3   # CH2
+        signal pin4   # CH3
+        signal pin5   # CH4
+        signal pin6   # CH5
+        signal pin7   # CH6
+        signal pin8   # CH7
+        signal pin9   # CH8
+        signal pin10  # CH9
+        signal pin11  # CH10
+        signal pin12  # CH11
+        signal pin13  # CH12
+        signal pin14  # CH13
+        signal pin15  # CH14
+        signal pin16  # CH15
+        signal pin17  # GND
+        signal pin18  # GND
+        signal pin19  # GND
+        signal pin20  # GND
+        signal pin21  # GND
+        signal pin22  # GND
+        signal pin23  # GND
+        signal pin24  # GND
+
+    # Connect channels to header
+    la_header.pin1 ~ CH0
+    la_header.pin2 ~ CH1
+    la_header.pin3 ~ CH2
+    la_header.pin4 ~ CH3
+    la_header.pin5 ~ CH4
+    la_header.pin6 ~ CH5
+    la_header.pin7 ~ CH6
+    la_header.pin8 ~ CH7
+    la_header.pin9 ~ CH8
+    la_header.pin10 ~ CH9
+    la_header.pin11 ~ CH10
+    la_header.pin12 ~ CH11
+    la_header.pin13 ~ CH12
+    la_header.pin14 ~ CH13
+    la_header.pin15 ~ CH14
+    la_header.pin16 ~ CH15
+
+    # Connect ground pins
+    la_header.pin17 ~ GND
+    la_header.pin18 ~ GND
+    la_header.pin19 ~ GND
+    la_header.pin20 ~ GND
+    la_header.pin21 ~ GND
+    la_header.pin22 ~ GND
+    la_header.pin23 ~ GND
+    la_header.pin24 ~ GND
+
+    # === Channel Assignment Notes ===
+    """
+    Default channel assignments (can be reconfigured during integration):
+
+    CH0-CH7: Primary bus signals (I²C, SPI, UART)
+    - CH0: I2C_SDA
+    - CH1: I2C_SCL
+    - CH2: SPI_MOSI
+    - CH3: SPI_MISO
+    - CH4: SPI_SCK
+    - CH5: SPI_CS0
+    - CH6: UART_TX
+    - CH7: UART_RX
+
+    CH8-CH11: Secondary bus signals (RS-485, control)
+    - CH8: RS485_A
+    - CH9: RS485_B
+    - CH10: Reserved
+    - CH11: Reserved
+
+    CH12-CH15: MCU GPIO or status signals
+    - CH12: GPIO0
+    - CH13: GPIO1
+    - CH14: FAULT_5V (from Power PCB)
+    - CH15: FAULT_3V3 (from Power PCB)
+
+    Note: Actual assignment happens in DBB top-level integration.
+    """
+
+    # === Physical Placement ===
+    """
+    Debug corner placement guidelines:
+    - Located in dedicated zone on DBB PCB (away from power switching)
+    - Accessible from front or side of enclosure
+    - Clearly labeled: "LOGIC ANALYZER" or "LA"
+    - Silkscreen indicates channel numbers (CH0-CH15)
+    - Ground pins clearly marked
+    """
+
+    # === Frozen Decision Compliance ===
+    """
+    §4.10: Logic analyzer header (16-channel, debug corner) ✓
+    - 2×12 Dupont header (16 channels + 8 ground pins)
+    - Dedicated debug corner (physical zone)
+    - Compatible with standard LA dongles
+    - Clean signal routing from debug corner
+    """

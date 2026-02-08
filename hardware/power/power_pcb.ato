@@ -1,0 +1,149 @@
+# Power PCB - Top-Level Integration
+# Feature F002: Power and Signal Subsystems - Power PCB
+
+from "input.ato" import PowerInput
+from "conversion.ato" import VoltageConversion
+from "protection.ato" import ProtectionAndUI
+from "variable_bay.ato" import VariablePowerBay
+
+module PowerPCB:
+    """
+    Complete Power PCB assembly.
+
+    Architecture:
+    - Input stage: 24V power brick, fuse, distribution
+    - Conversion stage: Buck converters (24V → 5V, 3.3V)
+    - Protection stage: 3× eFuse channels, UI (switches, LEDs, reset)
+    - Variable bay: Adjustable 0-24V @ 3A with banana outputs
+
+    Power Flow:
+    1. 24V_IN from power brick → PowerInput module
+    2. 24V_IN → VoltageConversion (buck converters)
+       - 5V_RAIL @ 5A
+       - 3V3_RAIL @ 3A
+    3. Rails → ProtectionAndUI (eFuse protection)
+       - 5V_OUT (protected)
+       - 3V3_OUT (protected)
+    4. 24V_IN → VariablePowerBay (adjustable module)
+       - VVAR_RAIL → ProtectionAndUI (eFuse)
+       - VVAR_OUT (protected)
+
+    Interface to DBB:
+    - 5V_OUT: Protected 5V rail (up to 5A available)
+    - 3V3_OUT: Protected 3.3V rail (up to 3A available)
+    - GND: Common ground plane
+    - FAULT_5V, FAULT_3V3, FAULT_VAR: Fault status signals (optional telemetry)
+
+    Physical Zones:
+    - Zone 1: Input protection (connector, fuse, bulk cap)
+    - Zone 2: Conversion (buck converters, thermals)
+    - Zone 3: eFuse protection + UI (switches, LEDs on front panel)
+    - Zone 4: Variable bay (DC-DC module, banana jacks, display)
+    """
+
+    # === Module Instantiation ===
+
+    # Input stage
+    input_stage = new PowerInput
+
+    # Conversion stage
+    conversion = new VoltageConversion
+
+    # Protection and UI
+    protection = new ProtectionAndUI
+
+    # Variable power bay
+    variable_bay = new VariablePowerBay
+
+    # === Ground Plane ===
+    signal GND
+
+    # === Power Distribution ===
+
+    # 24V distribution from input to converters and variable bay
+    input_stage.24V_IN ~ conversion.24V_IN
+    input_stage.24V_IN ~ variable_bay.24V_IN
+
+    # Ground connections
+    input_stage.GND ~ GND
+    conversion.GND ~ GND
+    protection.GND ~ GND
+    variable_bay.GND ~ GND
+
+    # === Fixed Rails: Conversion → Protection ===
+
+    # 5V rail
+    conversion.5V_RAIL ~ protection.5V_RAIL
+    conversion.EN_5V ~ protection.EN_5V
+
+    # 3.3V rail
+    conversion.3V3_RAIL ~ protection.3V3_RAIL
+    conversion.EN_3V3 ~ protection.EN_3V3
+
+    # === Variable Bay → Protection ===
+    variable_bay.VVAR_RAIL ~ protection.VVAR_RAIL
+
+    # Connect banana jacks to protected variable output
+    variable_bay.VVAR_OUT_PROTECTED ~ protection.VVAR_OUT
+
+    # === Output Interface to DBB ===
+
+    # Protected outputs (consumable by DBB)
+    signal 5V_OUT
+    signal 3V3_OUT
+    signal VVAR_OUT
+
+    protection.5V_OUT ~ 5V_OUT
+    protection.3V3_OUT ~ 3V3_OUT
+    protection.VVAR_OUT ~ VVAR_OUT
+
+    # Fault status signals (optional telemetry to MCU)
+    signal FAULT_5V
+    signal FAULT_3V3
+    signal FAULT_VAR
+
+    protection.FAULT_5V ~ FAULT_5V
+    protection.FAULT_3V3 ~ FAULT_3V3
+    protection.FAULT_VAR ~ FAULT_VAR
+
+    # === I²C Bus (for eFuse programming, future expansion) ===
+    signal I2C_SDA
+    signal I2C_SCL
+
+    protection.I2C_SDA ~ I2C_SDA
+    protection.I2C_SCL ~ I2C_SCL
+
+    # === Interface Contract to DBB ===
+    """
+    Power PCB provides the following interface:
+
+    Outputs:
+    - 5V_OUT: Protected 5V rail, up to 5A available
+    - 3V3_OUT: Protected 3.3V rail, up to 3A available
+    - VVAR_OUT: Variable rail (0-24V, user-adjustable, 3A limit)
+    - GND: Common ground
+
+    Status (optional telemetry):
+    - FAULT_5V: Active-low fault signal (eFuse tripped on 5V rail)
+    - FAULT_3V3: Active-low fault signal (eFuse tripped on 3.3V rail)
+    - FAULT_VAR: Active-low fault signal (eFuse tripped on variable rail)
+
+    Control (optional):
+    - I2C_SDA, I2C_SCL: eFuse configuration (if MCU-controlled)
+
+    Physical:
+    - Two-PCB architecture: Power PCB is separate from DBB
+    - Connection via ribbon cable or header (power + ground + signals)
+    - Power PCB mounted in high-power zone of enclosure
+    """
+
+    # === Frozen Decision Compliance ===
+    """
+    §4.1: 24V power brick, 10A fuse → PowerInput module ✓
+    §4.2: Two-PCB split (Power PCB defined here, DBB separate) ✓
+    §4.3: eFuse protection (3 channels) → ProtectionAndUI module ✓
+    §4.4: Rail capabilities (5V @ 5A, 3.3V @ 3A) → VoltageConversion ✓
+    §4.6: Variable bay (0-24V, 3A, banana outputs) → VariablePowerBay ✓
+    §4.7: UX (switches, LEDs, reset) → ProtectionAndUI ✓
+    §4.11: Power distribution (multiple taps via eFuses) → topology above ✓
+    """

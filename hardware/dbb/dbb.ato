@@ -1,0 +1,174 @@
+# DBB (Digital Backbone) - Top-Level Integration
+# Feature F002: Power and Signal Subsystems - DBB PCB
+
+from "bus_headers.ato" import BusHeaders
+from "switches.ato" import ConfigurationSwitches
+from "debug.ato" import DebugCorner
+
+module DBB:
+    """
+    Complete DBB (Digital Backbone) assembly.
+
+    Architecture:
+    - Bus headers: I²C, UART, SPI, RS-485 access points
+    - Configuration switches: Pull-ups, termination, voltage selection
+    - Debug corner: 16-channel logic analyzer header
+
+    Power Flow:
+    - Input: 5V_IN, 3V3_IN, GND (from Power PCB)
+    - Distribution: Power to bus headers and debug corner
+
+    Signal Flow:
+    - Bus signals routed from headers through switches (pull-ups/termination)
+    - Debug signals tapped from bus lines to logic analyzer header
+
+    Interface from Power PCB:
+    - 5V_IN: Protected 5V rail (from Power PCB eFuse)
+    - 3V3_IN: Protected 3.3V rail (from Power PCB eFuse)
+    - GND: Common ground plane
+    - FAULT_5V, FAULT_3V3 (optional telemetry)
+
+    Physical Zones:
+    - Zone 1: Bus headers (I²C, UART, SPI, RS-485)
+    - Zone 2: Configuration switches (DIP switches, accessible)
+    - Zone 3: Debug corner (logic analyzer header, clean signals)
+    """
+
+    # === Module Instantiation ===
+
+    # Bus headers
+    bus_headers = new BusHeaders
+
+    # Configuration switches
+    switches = new ConfigurationSwitches
+
+    # Debug corner
+    debug = new DebugCorner
+
+    # === Power Input Interface (from Power PCB) ===
+
+    signal 5V_IN
+    signal 3V3_IN
+    signal GND
+
+    # Optional fault telemetry from Power PCB
+    signal FAULT_5V
+    signal FAULT_3V3
+
+    # === Ground Plane ===
+    bus_headers.GND ~ GND
+    switches.GND ~ GND
+    debug.GND ~ GND
+
+    # === Power Distribution ===
+
+    # Distribute power to all modules
+    bus_headers.5V_IN ~ 5V_IN
+    bus_headers.3V3_IN ~ 3V3_IN
+
+    switches.5V_IN ~ 5V_IN
+    switches.3V3_IN ~ 3V3_IN
+
+    # === Bus Signal Connections ===
+
+    # I²C bus (from switches to headers)
+    switches.I2C_SDA ~ bus_headers.I2C_SDA
+    switches.I2C_SCL ~ bus_headers.I2C_SCL
+    switches.I2C_VCC ~ bus_headers.I2C_VCC
+
+    # UART bus
+    switches.UART_VCC ~ bus_headers.UART_VCC
+    # UART signals (TX, RX, CTS, RTS) routed directly from headers
+    # No configuration needed for UART (straight-through)
+
+    # SPI bus
+    switches.SPI_VCC ~ bus_headers.SPI_VCC
+    # SPI signals (MOSI, MISO, SCK, CS) routed directly from headers
+    # No configuration needed for SPI (straight-through)
+
+    # RS-485 bus (from switches to headers, with termination/bias)
+    switches.RS485_A ~ bus_headers.RS485_A
+    switches.RS485_B ~ bus_headers.RS485_B
+    switches.RS485_VLOGIC ~ bus_headers.RS485_VLOGIC
+
+    # === Debug Channel Assignments ===
+
+    # Tap bus signals to logic analyzer channels
+    bus_headers.I2C_SDA ~ debug.CH0
+    bus_headers.I2C_SCL ~ debug.CH1
+
+    bus_headers.SPI_MOSI ~ debug.CH2
+    bus_headers.SPI_MISO ~ debug.CH3
+    bus_headers.SPI_SCK ~ debug.CH4
+    bus_headers.SPI_CS0 ~ debug.CH5
+
+    bus_headers.UART_TX ~ debug.CH6
+    bus_headers.UART_RX ~ debug.CH7
+
+    bus_headers.RS485_A ~ debug.CH8
+    bus_headers.RS485_B ~ debug.CH9
+
+    # Reserved debug channels (CH10-CH13 for future expansion)
+    # Can be assigned to MCU GPIOs, status signals, etc.
+
+    # Fault telemetry to debug channels (optional)
+    FAULT_5V ~ debug.CH14
+    FAULT_3V3 ~ debug.CH15
+
+    # === Interface Contract from Power PCB ===
+    """
+    DBB consumes the following from Power PCB:
+
+    Inputs:
+    - 5V_IN: Protected 5V rail (up to 5A available from Power PCB)
+    - 3V3_IN: Protected 3.3V rail (up to 3A available from Power PCB)
+    - GND: Common ground
+
+    Optional (telemetry):
+    - FAULT_5V: Fault status from 5V eFuse (active-low)
+    - FAULT_3V3: Fault status from 3.3V eFuse (active-low)
+
+    Physical:
+    - Two-PCB architecture: DBB is separate from Power PCB
+    - Connection via ribbon cable or header (power + ground + signals)
+    - DBB mounted in clean signal zone of enclosure
+    """
+
+    # === Operational Notes ===
+    """
+    User Configuration Workflow:
+
+    1. Power rails:
+       - Enable 5V/3.3V rails via rocker switches on Power PCB
+       - Monitor ON LEDs on Power PCB front panel
+
+    2. Bus configuration (via DIP switches on DBB):
+       - I²C: Enable pull-ups, select 3.3V or 5V logic
+       - RS-485: Enable termination (endpoints only), enable bias, select VLOGIC
+
+    3. Connect devices to bus headers:
+       - I²C devices: Connect to J4 (1×6 header)
+       - UART devices: Connect to J5 (1×6 header)
+       - SPI devices: Connect to J6 (2×5 header, supports 2 peripherals)
+       - RS-485 devices: Connect to J7 (1×6 header)
+
+    4. Debug (logic analyzer):
+       - Connect LA dongle to J8 (2×12 header)
+       - Channels auto-assigned to bus signals
+       - Use LA software to capture and decode protocols
+
+    5. Fault handling:
+       - If eFuse trips: Check FAULT LEDs on Power PCB
+       - Press reset button to clear fault latch
+       - Investigate overcurrent/short condition before re-enabling
+    """
+
+    # === Frozen Decision Compliance ===
+    """
+    §4.2: Two-PCB split (DBB defined here, Power PCB separate) ✓
+    §4.5: Breadboard policy (3.3V/5V/GND available on headers) ✓
+    §4.8: Bus headers (Dupont, separate blocks) ✓
+    §4.9: RS-485 switches (TERM, BIAS, VLOGIC) ✓
+    §4.10: Logic analyzer (16-channel header, debug corner) ✓
+    §4.11: Power distribution (multiple header taps) ✓
+    """
