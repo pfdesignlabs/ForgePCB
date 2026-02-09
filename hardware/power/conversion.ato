@@ -12,12 +12,12 @@ module VoltageConversion:
     - Output capacitors per datasheet recommendations
 
     Interface:
-    - Input: 24V_IN from PowerInput module
-    - Outputs: 5V_RAIL, 3V3_RAIL
+    - Input: V24_IN from PowerInput module
+    - Outputs: V5_RAIL, V3V3_RAIL
     """
 
     # Input power
-    signal 24V_IN
+    signal V24_IN
     signal GND
 
     # Output rails
@@ -160,7 +160,7 @@ module VoltageConversion:
         signal b
 
     # === 5V Buck Connections ===
-    24V_IN ~ buck_5v_cin.p
+    V24_IN ~ buck_5v_cin.p
     buck_5v_cin.n ~ GND
 
     buck_5v_cin.p ~ buck_5v.VIN
@@ -180,7 +180,7 @@ module VoltageConversion:
     r_fb_5v_upper.b ~ buck_5v.FB
 
     # === 3.3V Buck Connections ===
-    24V_IN ~ buck_3v3_cin.p
+    V24_IN ~ buck_3v3_cin.p
     buck_3v3_cin.n ~ GND
 
     buck_3v3_cin.p ~ buck_3v3.VIN

@@ -17,14 +17,14 @@ module PowerPCB:
     - Variable bay: Adjustable 0-24V @ 3A with banana outputs
 
     Power Flow:
-    1. 24V_IN from power brick → PowerInput module
-    2. 24V_IN → VoltageConversion (buck converters)
-       - 5V_RAIL @ 5A
-       - 3V3_RAIL @ 3A
+    1. V24_IN from power brick → PowerInput module
+    2. V24_IN → VoltageConversion (buck converters)
+       - V5_RAIL @ 5A
+       - V3V3_RAIL @ 3A
     3. Rails → ProtectionAndUI (eFuse protection)
        - 5V_OUT (protected)
        - 3V3_OUT (protected)
-    4. 24V_IN → VariablePowerBay (adjustable module)
+    4. V24_IN → VariablePowerBay (adjustable module)
        - VVAR_RAIL → ProtectionAndUI (eFuse)
        - VVAR_OUT (protected)
 
@@ -61,8 +61,8 @@ module PowerPCB:
     # === Power Distribution ===
 
     # 24V distribution from input to converters and variable bay
-    input_stage.24V_IN ~ conversion.24V_IN
-    input_stage.24V_IN ~ variable_bay.24V_IN
+    input_stage.V24_IN ~ conversion.V24_IN
+    input_stage.V24_IN ~ variable_bay.V24_IN
 
     # Ground connections
     input_stage.GND ~ GND
@@ -73,11 +73,11 @@ module PowerPCB:
     # === Fixed Rails: Conversion → Protection ===
 
     # 5V rail
-    conversion.5V_RAIL ~ protection.5V_RAIL
+    conversion.V5_RAIL ~ protection.V5_RAIL
     conversion.EN_5V ~ protection.EN_5V
 
     # 3.3V rail
-    conversion.3V3_RAIL ~ protection.3V3_RAIL
+    conversion.V3V3_RAIL ~ protection.V3V3_RAIL
     conversion.EN_3V3 ~ protection.EN_3V3
 
     # === Variable Bay → Protection ===

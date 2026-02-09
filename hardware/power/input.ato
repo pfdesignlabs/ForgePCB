@@ -14,7 +14,7 @@ module PowerInput:
     - Input protection and distribution to downstream converters
 
     Interface:
-    - Output: 24V_IN rail (feeds buck converters and variable bay)
+    - Output: V24_IN rail (feeds buck converters and variable bay)
     """
 
     # Input connector - locking DC barrel/panel mount
@@ -61,7 +61,7 @@ module PowerInput:
         signal minus
 
     # Power distribution rail
-    signal 24V_IN  # Primary 24V rail to converters
+    signal V24_IN  # Primary 24V rail to converters
     signal GND     # Ground plane
 
     # Connections
@@ -69,8 +69,8 @@ module PowerInput:
     input_gnd ~ input_connector.pin_gnd
 
     input_connector.pin_plus ~ fuse_holder.in
-    fuse_holder.out ~ 24V_IN
+    fuse_holder.out ~ V24_IN
 
-    input_cap.plus ~ 24V_IN
+    input_cap.plus ~ V24_IN
     input_cap.minus ~ GND
     input_gnd ~ GND

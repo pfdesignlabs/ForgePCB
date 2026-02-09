@@ -13,14 +13,14 @@ module VariablePowerBay:
     - Downstream eFuse for safety cutoff (3A limit)
 
     Interface:
-    - Input: 24V_IN (from PowerInput module)
+    - Input: V24_IN (from PowerInput module)
     - Output: VVAR_RAIL (to eFuse protection)
     - Control: Module onboard controls (potentiometer, enable switch)
     - Fault: Integrated with main eFuse/fault system
     """
 
     # Input power
-    signal 24V_IN
+    signal V24_IN
     signal GND
 
     # Output to eFuse
@@ -105,10 +105,10 @@ module VariablePowerBay:
     # ===== Connections =====
 
     # Input from 24V rail
-    24V_IN ~ var_cin.plus
+    V24_IN ~ var_cin.plus
     var_cin.minus ~ GND
 
-    24V_IN ~ var_dcdc_module.VIN
+    V24_IN ~ var_dcdc_module.VIN
     var_dcdc_module.GND ~ GND
 
     # Module output to downstream eFuse
