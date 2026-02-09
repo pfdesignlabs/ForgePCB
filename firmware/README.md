@@ -28,15 +28,18 @@ firmware/
 │   ├── flash_esp32.sh  # ESP32-S3 flash orchestration
 │   ├── flash_rp2040.sh # RP2040 flash orchestration
 │   ├── serial_capture.sh # Serial output capture
-│   └── build_metadata.sh # Build provenance capture
+│   └── log_event.sh    # Manual action event logging
 ├── configs/            # USB identity and device mappings
 │   ├── udev/           # udev rules for stable device identity
 │   │   └── 99-forgepcb.rules
 │   └── devices.yaml    # Device identity mapping
+├── examples/           # Integration examples
+│   └── platformio.ini  # PlatformIO configuration example
 └── docs/               # Workflow documentation
     ├── FLASHING.md     # Flash workflow guide
     ├── SERIAL.md       # Serial capture guide
-    └── PROVENANCE.md   # Build metadata guide
+    ├── PROVENANCE.md   # Build metadata guide
+    └── PLATFORMIO.md   # PlatformIO integration guide
 ```
 
 ---
@@ -113,6 +116,37 @@ cd firmware/tools/
 cd firmware/tools/
 ./serial_capture.sh --target esp32s3 --log-dir /var/log/forgepcb/
 ```
+
+---
+
+## PlatformIO Integration (Optional)
+
+ForgePCB works great with **PlatformIO** while maintaining mandatory provenance tracking!
+
+### Quick Start with PlatformIO
+
+```bash
+# 1. Install PlatformIO
+pip install platformio
+
+# 2. Copy example config to your project
+cp firmware/examples/platformio.ini ~/my-project/platformio.ini
+
+# 3. Adjust paths in platformio.ini
+# (Update upload_command to point to ForgePCB flash scripts)
+
+# 4. Build and flash
+cd ~/my-project/
+pio run --target upload  # Builds + flashes with provenance!
+```
+
+**How it works:**
+- PlatformIO builds your firmware (Arduino, ESP-IDF, Pico SDK)
+- Custom upload command calls ForgePCB flash scripts
+- Provenance tracking enforced (build ID from git commit)
+- Best of both worlds: PlatformIO convenience + ForgePCB compliance
+
+**See:** `firmware/docs/PLATFORMIO.md` for complete integration guide
 
 ---
 
