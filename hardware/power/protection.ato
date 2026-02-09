@@ -27,14 +27,14 @@ module ProtectionAndUI:
     """
 
     # Input rails (from converters)
-    signal 5V_RAIL
-    signal 3V3_RAIL
+    signal V5_RAIL
+    signal V3V3_RAIL
     signal VVAR_RAIL  # Variable bay rail
     signal GND
 
     # Output rails (protected)
-    signal 5V_OUT
-    signal 3V3_OUT
+    signal V5_OUT
+    signal V3V3_OUT
     signal VVAR_OUT
 
     # Control signals
@@ -291,23 +291,23 @@ module ProtectionAndUI:
 
     # 5V eFuse
     5V_RAIL ~ efuse_5v.VIN
-    efuse_5v.VOUT ~ 5V_OUT
+    efuse_5v.VOUT ~ V5_OUT
     efuse_5v.VOUT ~ efuse_5v_cout.p
     efuse_5v_cout.n ~ GND
     efuse_5v.GND ~ GND
     efuse_5v.EN ~ EN_5V
-    efuse_5v.FAULT ~ FAULT_5V
+    efuse_5v.FAULT ~ FAULT_V5
     efuse_5v.SDA ~ I2C_SDA
     efuse_5v.SCL ~ I2C_SCL
 
     # 3.3V eFuse
     3V3_RAIL ~ efuse_3v3.VIN
-    efuse_3v3.VOUT ~ 3V3_OUT
+    efuse_3v3.VOUT ~ V3V3_OUT
     efuse_3v3.VOUT ~ efuse_3v3_cout.p
     efuse_3v3_cout.n ~ GND
     efuse_3v3.GND ~ GND
     efuse_3v3.EN ~ EN_3V3
-    efuse_3v3.FAULT ~ FAULT_3V3
+    efuse_3v3.FAULT ~ FAULT_V3V3
     efuse_3v3.SDA ~ I2C_SDA
     efuse_3v3.SCL ~ I2C_SCL
 
@@ -356,11 +356,11 @@ module ProtectionAndUI:
     # FAULT LEDs (illuminate when fault signal is active)
     5V_OUT ~ r_led_5v_fault.a
     r_led_5v_fault.b ~ led_5v_fault.anode
-    led_5v_fault.cathode ~ FAULT_5V  # Active-low fault signal pulls cathode low
+    led_5v_fault.cathode ~ FAULT_V5  # Active-low fault signal pulls cathode low
 
     3V3_OUT ~ r_led_3v3_fault.a
     r_led_3v3_fault.b ~ led_3v3_fault.anode
-    led_3v3_fault.cathode ~ FAULT_3V3
+    led_3v3_fault.cathode ~ FAULT_V3V3
 
     VVAR_OUT ~ r_led_var_fault.a
     r_led_var_fault.b ~ led_var_fault.anode

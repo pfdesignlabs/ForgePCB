@@ -1,0 +1,12 @@
+# Absolute minimal test
+
+module Minimal:
+    """Ultra simple test"""
+
+    # Just a resistor
+    component r1:
+        footprint = "Resistor_SMD:R_0805_2012Metric"
+
+        # Pins as signals
+        pin p1
+        pin p2

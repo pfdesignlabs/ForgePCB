@@ -21,8 +21,8 @@ module VoltageConversion:
     signal GND
 
     # Output rails
-    signal 5V_RAIL
-    signal 3V3_RAIL
+    signal V5_RAIL
+    signal V3V3_RAIL
 
     # 24V → 5V Buck Converter (5A capability)
     component buck_5v:
@@ -171,7 +171,7 @@ module VoltageConversion:
     buck_5v_cout1.n ~ GND
     buck_5v_cout2.n ~ GND
 
-    buck_5v.VOUT ~ 5V_RAIL
+    buck_5v.VOUT ~ V5_RAIL
 
     # Feedback divider for 5V
     buck_5v.VOUT ~ r_fb_5v_upper.a
@@ -191,7 +191,7 @@ module VoltageConversion:
     buck_3v3_cout1.n ~ GND
     buck_3v3_cout2.n ~ GND
 
-    buck_3v3.VOUT ~ 3V3_RAIL
+    buck_3v3.VOUT ~ V3V3_RAIL
 
     # Feedback divider for 3.3V
     buck_3v3.VOUT ~ r_fb_3v3_upper.a

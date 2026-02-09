@@ -1,0 +1,99 @@
+# Simplified Power PCB for KiCAD export
+# Just the essential power path: Input → 5V Buck → Output
+
+module PowerPCBSimple:
+    """
+    Simplified Power PCB with just 5V buck converter.
+    Goal: Get a working KiCAD export to show routing concept.
+    """
+
+    # === Input connector ===
+    component input_connector:
+        footprint = "Connector_BarrelJack:BarrelJack_Horizontal"
+        mpn = "PJ-002AH"  # 2.1mm barrel jack
+        value = "24V_IN"
+
+        signal tip
+        signal sleeve
+
+    # === Input fuse ===
+    component fuse:
+        footprint = "Fuse:Fuse_BelFuse_0ZRE0025FF_L8.3mm_W3.8mm"
+        mpn = "0ZRE0025FF"
+        value = "10A"
+
+        signal p1
+        signal p2
+
+    # === Input bulk capacitor ===
+    component cin:
+        footprint = "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm"
+        value = "220uF"
+        voltage = "35V"
+        type = "electrolytic"
+
+        signal plus
+        signal minus
+
+    # === 5V Buck converter ===
+    component buck_5v:
+        footprint = "Package_TO_SOT_SMD:TO-252-3_TabPin2"
+        mpn = "LM2596S-5.0"  # Popular 5V buck
+        value = "5V_BUCK"
+
+        signal vin
+        signal gnd
+        signal vout
+
+    # === Output bulk capacitor ===
+    component cout:
+        footprint = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
+        value = "1000uF"
+        voltage = "10V"
+        type = "electrolytic"
+
+        signal plus
+        signal minus
+
+    # === Output connector (to DBB) ===
+    component output_connector:
+        footprint = "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+        value = "TO_DBB"
+
+        signal v5
+        signal gnd_1
+        signal gnd_2
+
+    # === Ground plane ===
+    signal GND
+
+    # === 24V rail ===
+    signal V24_RAIL
+
+    # === 5V rail ===
+    signal V5_RAIL
+
+    # === Connections ===
+
+    # Input path
+    input_connector.tip ~ fuse.p1
+    fuse.p2 ~ V24_RAIL
+    V24_RAIL ~ cin.plus
+    cin.minus ~ GND
+
+    # Buck converter
+    V24_RAIL ~ buck_5v.vin
+    buck_5v.gnd ~ GND
+    buck_5v.vout ~ V5_RAIL
+
+    # Output filtering
+    V5_RAIL ~ cout.plus
+    cout.minus ~ GND
+
+    # Output connector
+    V5_RAIL ~ output_connector.v5
+    GND ~ output_connector.gnd_1
+    GND ~ output_connector.gnd_2
+
+    # Input ground
+    input_connector.sleeve ~ GND

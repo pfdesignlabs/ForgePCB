@@ -123,18 +123,18 @@ module ForgePCB:
     # === Inter-PCB Power Interface ===
 
     # Power PCB provides protected rails to DBB and MCU carriers
-    power_pcb.5V_OUT ~ dbb.5V_IN
-    power_pcb.3V3_OUT ~ dbb.3V3_IN
+    power_pcb.V5_OUT ~ dbb.V5_IN
+    power_pcb.V3V3_OUT ~ dbb.V3V3_IN
 
     # Power PCB provides protected rails to MCU carriers
-    power_pcb.5V_OUT ~ mcu_carriers.5V_IN
-    power_pcb.3V3_OUT ~ mcu_carriers.3V3_IN
+    power_pcb.V5_OUT ~ mcu_carriers.V5_IN
+    power_pcb.V3V3_OUT ~ mcu_carriers.V3V3_IN
 
     # === Inter-PCB Telemetry (Optional) ===
 
     # Fault signals from Power PCB to DBB (can be routed to debug or MCU)
-    power_pcb.FAULT_5V ~ dbb.FAULT_5V
-    power_pcb.FAULT_3V3 ~ dbb.FAULT_3V3
+    power_pcb.FAULT_V5 ~ dbb.FAULT_V5
+    power_pcb.FAULT_V3V3 ~ dbb.FAULT_V3V3
 
     # === External Interfaces (System-Level) ===
 
@@ -146,11 +146,8 @@ module ForgePCB:
     power_pcb.input_stage.input_gnd ~ EXTERNAL_24V_GND
 
     # Output: Variable bay banana jacks (on Power PCB)
-    signal BANANA_RED_OUTPUT
-    signal BANANA_BLACK_OUTPUT
-
-    power_pcb.variable_bay.banana_red.pin ~ BANANA_RED_OUTPUT
-    power_pcb.variable_bay.banana_black.pin ~ BANANA_BLACK_OUTPUT
+    # Note: Banana jacks are already connected internally in variable_bay module
+    # to VVAR_OUT_PROTECTED and GND, no external connection needed
 
     # Output: Bus headers (on DBB)
     # I²C, UART, SPI, RS-485 headers exposed on DBB front/side panel

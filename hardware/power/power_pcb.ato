@@ -89,21 +89,21 @@ module PowerPCB:
     # === Output Interface to DBB ===
 
     # Protected outputs (consumable by DBB)
-    signal 5V_OUT
-    signal 3V3_OUT
+    signal V5_OUT
+    signal V3V3_OUT
     signal VVAR_OUT
 
-    protection.5V_OUT ~ 5V_OUT
-    protection.3V3_OUT ~ 3V3_OUT
+    protection.V5_OUT ~ V5_OUT
+    protection.V3V3_OUT ~ V3V3_OUT
     protection.VVAR_OUT ~ VVAR_OUT
 
     # Fault status signals (optional telemetry to MCU)
-    signal FAULT_5V
-    signal FAULT_3V3
+    signal FAULT_V5
+    signal FAULT_V3V3
     signal FAULT_VAR
 
-    protection.FAULT_5V ~ FAULT_5V
-    protection.FAULT_3V3 ~ FAULT_3V3
+    protection.FAULT_V5 ~ FAULT_V5
+    protection.FAULT_V3V3 ~ FAULT_V3V3
     protection.FAULT_VAR ~ FAULT_VAR
 
     # === I²C Bus (for eFuse programming, future expansion) ===

@@ -28,12 +28,12 @@ module ESP32S3Carrier:
     common = new CarrierCommon
 
     # === Power Input ===
-    signal 5V_IN
-    signal 3V3_IN
+    signal V5_IN
+    signal V3V3_IN
     signal GND
 
-    common.5V_IN ~ 5V_IN
-    common.3V3_IN ~ 3V3_IN
+    common.V5_IN ~ V5_IN
+    common.V3V3_IN ~ V3V3_IN
     common.GND ~ GND
 
     # === ESP32-S3 DevKit Tray ===
@@ -194,7 +194,7 @@ module ESP32S3Carrier:
 
     # === Power Distribution ===
     # Feed 5V to devboard VIN pin
-    devkit_socket_right.pin19 ~ 5V_IN
+    devkit_socket_right.pin19 ~ V5_IN
 
     # Connect grounds
     devkit_socket_left.pin1 ~ GND  # If 3V3 pin used as GND tap
@@ -235,7 +235,7 @@ module ESP32S3Carrier:
     # Note: ESP32-S3 has native USB, pins GPIO19/GPIO20 (USB_DP/DM)
     usb_connector.DP ~ devkit_socket_right.pin13  # GPIO19 (USB_D+)
     usb_connector.DM ~ devkit_socket_right.pin14  # GPIO20 (USB_D-)
-    usb_connector.VBUS ~ 5V_IN
+    usb_connector.VBUS ~ V5_IN
     usb_connector.GND ~ GND
 
     # === Control Buttons ===

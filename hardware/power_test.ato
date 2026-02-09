@@ -1,0 +1,25 @@
+# Simple power circuit test with generics
+from "generics/resistors.ato" import Resistor
+from "generics/capacitors.ato" import Capacitor
+
+module PowerTest:
+    """
+    Simple power circuit: input filtering with RC
+    """
+
+    # Input resistor (simulating fuse resistance)
+    r_fuse = new Resistor
+    r_fuse.value = 100mohm +/- 10%
+
+    # Bulk input capacitor
+    c_bulk = new Capacitor
+    c_bulk.value = 220uF +/- 20%
+    c_bulk.package = "1210"
+
+    # Simple RC filter: r_fuse -> c_bulk -> GND
+    signal VIN
+    signal GND
+
+    VIN ~ r_fuse.1
+    r_fuse.2 ~ c_bulk.1
+    c_bulk.2 ~ GND
