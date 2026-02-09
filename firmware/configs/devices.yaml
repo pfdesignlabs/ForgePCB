@@ -1,0 +1,157 @@
+# ForgePCB Device Identity Mapping
+# Feature F005: Stable USB identity and target selection
+#
+# This file defines the canonical device mapping for ForgePCB targets.
+# Used by firmware tooling to resolve target names to device paths.
+
+# ==============================================================================
+# Frozen Decision (F005 #3):
+# "Each carrier class must be targetable deterministically.
+#  Flashing without explicit target selection is forbidden."
+# ==============================================================================
+
+targets:
+  # ESP32-S3 DevKit Carrier
+  esp32s3:
+    device_path: /dev/forgepcb-esp32s3
+    device_type: serial
+    vid: "0x303a"
+    pid: "0x1001"
+    flash_tool: esptool.py
+    flash_speed: 921600
+    reset_method: hardware  # DTR/RTS controlled by esptool
+    serial_speed: 115200
+    description: "ESP32-S3 DevKit carrier (ForgePCB)"
+
+  # RP2040 Pico Carrier
+  rp2040:
+    device_path: /dev/forgepcb-rp2040
+    device_type: serial
+    vid: "0x2e8a"
+    pid: "0x000a"
+    flash_tool: picotool
+    flash_mode: uf2  # Or direct via SWD if available
+    reset_method: manual  # RUN button on carrier
+    serial_speed: 115200
+    bootsel_vid: "0x2e8a"
+    bootsel_pid: "0x0003"
+    description: "RP2040 Pico carrier (ForgePCB)"
+
+  # Logic Analyzer Dongle (for reference, not flashable)
+  logic_analyzer:
+    device_path: /dev/forgepcb-la
+    device_type: usb
+    vid: "0x04b4"  # Example: Fx2lafw
+    pid: "0x8613"
+    description: "Logic analyzer dongle (16-channel, ForgePCB debug corner)"
+    flash_tool: null  # Not flashable via ForgePCB tooling
+
+  # Utility Slot (Future)
+  utility:
+    device_path: /dev/forgepcb-util
+    device_type: serial
+    description: "Utility slot for future expansion"
+    flash_tool: null
+
+# ==============================================================================
+# USB Hub Configuration
+# ==============================================================================
+hub:
+  ports: 4
+  upstream:
+    description: "Single USB connection to ForgeOS host"
+    expected_location: "/sys/bus/usb/devices/1-1"  # Example kernel path
+  downstream:
+    - port: 1
+      target: esp32s3
+      description: "ESP32-S3 carrier"
+    - port: 2
+      target: rp2040
+      description: "RP2040 Pico carrier"
+    - port: 3
+      target: logic_analyzer
+      description: "Logic analyzer dongle"
+    - port: 4
+      target: utility
+      description: "Utility slot (future)"
+
+# ==============================================================================
+# Flash Tool Configurations
+# ==============================================================================
+flash_tools:
+  esptool:
+    command: esptool.py
+    args:
+      - --chip esp32s3
+      - --port {device_path}
+      - --baud {flash_speed}
+      - write_flash
+      - -z  # Compress
+      - "0x0"  # Flash offset
+      - "{firmware_path}"
+    verify: true
+    erase_before_flash: false  # Optional, use --erase-all if needed
+
+  picotool:
+    command: picotool
+    args:
+      - load
+      - "{firmware_path}"
+      - --force  # Overwrite existing firmware
+      - --verify  # Verify after flashing
+    bootsel_required: true  # Requires BOOTSEL mode (RUN button held)
+
+# ==============================================================================
+# Serial Capture Configuration
+# ==============================================================================
+serial_capture:
+  log_dir: /var/log/forgepcb/
+  log_format: "{target}-{timestamp}.log"
+  timestamp_format: "%Y%m%d-%H%M%S"
+  line_prefix: "[{timestamp}] "
+  buffer_size: 4096
+  retention_days: 30
+  rotation_max_size_mb: 100
+
+# ==============================================================================
+# Provenance Configuration
+# ==============================================================================
+provenance:
+  storage_dir: /var/log/forgepcb/provenance/
+  format: json
+  fields:
+    - target
+    - build_id
+    - toolchain
+    - firmware_path
+    - flash_time
+    - flash_result
+    - serial_log
+    - human_events
+  retention_days: 90
+
+# ==============================================================================
+# Fault Handling Configuration
+# ==============================================================================
+fault_handling:
+  rail_fault_check: true  # Check for rail fault before flashing
+  fault_indicator_gpio: null  # Optional: GPIO to read fault status
+  fault_log_path: /var/log/forgepcb/faults.log
+  fault_action: stop  # stop | warn | continue (frozen decision: stop)
+  acknowledge_required: true  # Explicit acknowledgement to resume
+
+# ==============================================================================
+# Event Logging Configuration
+# ==============================================================================
+event_logging:
+  log_path: /var/log/forgepcb/events.log
+  format: json
+  events:
+    - manual_reset
+    - reseat
+    - power_cycle
+    - fault_cleared
+    - flash_start
+    - flash_complete
+    - serial_start
+    - serial_stop
