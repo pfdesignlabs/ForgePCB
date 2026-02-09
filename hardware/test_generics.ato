@@ -1,0 +1,14 @@
+# Test using generics library components
+from "generics/resistors.ato" import Resistor
+
+module TestGenerics:
+    """Test using standard Resistor from generics"""
+
+    r1 = new Resistor
+    r1.value = 1kohm +/- 10%
+
+    r2 = new Resistor
+    r2.value = 1kohm +/- 10%
+
+    # Connect them
+    r1.2 ~ r2.1

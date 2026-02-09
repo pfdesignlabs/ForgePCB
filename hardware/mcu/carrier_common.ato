@@ -41,8 +41,8 @@ module CarrierCommon:
 
     No level shifting on carrier: GPIO levels match devboard native levels.
     """
-    signal 5V_IN
-    signal 3V3_IN
+    signal V5_IN
+    signal V3V3_IN
     signal GND
 
     # === GPIO Exposure Standard ===

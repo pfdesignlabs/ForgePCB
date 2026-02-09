@@ -22,8 +22,8 @@ module ConfigurationSwitches:
     """
 
     # Power inputs
-    signal 5V_IN
-    signal 3V3_IN
+    signal V5_IN
+    signal V3V3_IN
     signal GND
 
     # Bus signals (from bus_headers module)
@@ -96,7 +96,7 @@ module ConfigurationSwitches:
 
     # VCC selection (simplified: using 3.3V as default, jumper to 5V)
     # In practice: Use SPDT switch or jumper block
-    I2C_VCC ~ 3V3_IN  # Default to 3.3V, user can jumper to 5V
+    I2C_VCC ~ V3V3_IN  # Default to 3.3V, user can jumper to 5V
 
     # ===== RS-485 Configuration =====
 
@@ -184,7 +184,7 @@ module ConfigurationSwitches:
     r_bias_b.b ~ RS485_B
 
     # VLOGIC selection (simplified: default 3.3V, jumper to 5V)
-    RS485_VLOGIC ~ 3V3_IN  # Default to 3.3V
+    RS485_VLOGIC ~ V3V3_IN  # Default to 3.3V
 
     # ===== UART and SPI VCC Selection (Simplified) =====
     """
@@ -196,8 +196,8 @@ module ConfigurationSwitches:
 
     Advanced: Use additional DIP switches or SPDT switches.
     """
-    UART_VCC ~ 3V3_IN
-    SPI_VCC ~ 3V3_IN
+    UART_VCC ~ V3V3_IN
+    SPI_VCC ~ V3V3_IN
 
     # ===== Operational Notes =====
     """

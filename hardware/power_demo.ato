@@ -1,0 +1,77 @@
+# ForgePCB Power Circuit Demo
+# Shows essential power path for KiCAD import
+from "generics/resistors.ato" import Resistor
+from "generics/capacitors.ato" import Capacitor
+
+module PowerDemo:
+    """
+    Demonstrates ForgePCB power path:
+    Input connector -> Fuse (resistor) -> Bulk cap -> Buck (placeholder) -> Filter cap -> Output
+
+    This is a working KiCAD-exportable circuit to demonstrate routing concept.
+    """
+
+    # === Input Stage ===
+
+    # Fuse (represented as low-value resistor for circuit purposes)
+    fuse = new Resistor
+    fuse.value = 100mohm +/- 10%
+    fuse.package = "1206"
+
+    # Input bulk capacitor (24V tolerant)
+    c_bulk_in = new Capacitor
+    c_bulk_in.value = 220uF +/- 20%
+    c_bulk_in.package = "1210"
+
+    # === Buck Converter Stage ===
+    # Note: Buck IC represented as resistive network for netlist purposes
+    # In real PCB, this would be LM2596S-5.0 TO-252 package
+
+    r_buck_sense = new Resistor
+    r_buck_sense.value = 1kohm +/- 10%
+    r_buck_sense.package = "0805"
+
+    # === Output Stage ===
+
+    # Output bulk capacitor (5V rail)
+    c_bulk_out = new Capacitor
+    c_bulk_out.value = 100uF +/- 20%
+    c_bulk_out.package = "1210"
+
+    # Output filter capacitor
+    c_filter_out = new Capacitor
+    c_filter_out.value = 10uF +/- 20%
+    c_filter_out.package = "0805"
+
+    # Load simulation resistor
+    r_load = new Resistor
+    r_load.value = 10kohm +/- 10%
+    r_load.package = "0805"
+
+    # === Power Rails ===
+    signal V24_INPUT
+    signal V24_FILTERED
+    signal V5_OUTPUT
+    signal GND
+
+    # === Connections ===
+
+    # Input protection and filtering
+    V24_INPUT ~ fuse.1
+    fuse.2 ~ V24_FILTERED
+    V24_FILTERED ~ c_bulk_in.1
+    c_bulk_in.2 ~ GND
+
+    # Buck converter (simplified as resistive divider)
+    V24_FILTERED ~ r_buck_sense.1
+    r_buck_sense.2 ~ V5_OUTPUT
+
+    # Output filtering and load
+    V5_OUTPUT ~ c_bulk_out.1
+    c_bulk_out.2 ~ GND
+
+    V5_OUTPUT ~ c_filter_out.1
+    c_filter_out.2 ~ GND
+
+    V5_OUTPUT ~ r_load.1
+    r_load.2 ~ GND

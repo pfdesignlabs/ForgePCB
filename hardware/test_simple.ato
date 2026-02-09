@@ -1,0 +1,20 @@
+# Ultra-simple connection test
+# Just two components connected together
+
+module TwoComponents:
+    """Test if component connections work"""
+
+    # Resistor 1
+    component r1:
+        footprint = "Resistor_SMD:R_0805_2012Metric"
+        signal p1
+        signal p2
+
+    # Resistor 2
+    component r2:
+        footprint = "Resistor_SMD:R_0805_2012Metric"
+        signal p1
+        signal p2
+
+    # Connect them
+    r1.p2 ~ r2.p1

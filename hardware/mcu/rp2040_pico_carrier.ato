@@ -28,12 +28,12 @@ module RP2040PicoCarrier:
     common = new CarrierCommon
 
     # === Power Input ===
-    signal 5V_IN
-    signal 3V3_IN
+    signal V5_IN
+    signal V3V3_IN
     signal GND
 
-    common.5V_IN ~ 5V_IN
-    common.3V3_IN ~ 3V3_IN
+    common.V5_IN ~ V5_IN
+    common.V3V3_IN ~ V3V3_IN
     common.GND ~ GND
 
     # === RP2040 Pico Tray ===
@@ -200,7 +200,7 @@ module RP2040PicoCarrier:
 
     # === Power Distribution ===
     # Feed 5V to Pico VBUS pin (USB power input)
-    pico_socket_right.pin1 ~ 5V_IN  # VBUS
+    pico_socket_right.pin1 ~ V5_IN  # VBUS
 
     # Connect grounds
     pico_socket_left.pin3 ~ GND
@@ -248,7 +248,7 @@ module RP2040PicoCarrier:
     # Alternative: Use carrier USB-C for both power and data (requires DP/DM routing)
 
     # For now: Carrier USB-C provides power, data via Pico's onboard USB
-    usb_connector.VBUS ~ 5V_IN
+    usb_connector.VBUS ~ V5_IN
     usb_connector.GND ~ GND
     # DP/DM left unconnected (use Pico's onboard USB for data)
     # OR: Route to test points for future use

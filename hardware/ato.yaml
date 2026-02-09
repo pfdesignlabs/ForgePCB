@@ -14,17 +14,18 @@ description: >
   and standardized bus access (I²C, UART, SPI, RS-485).
 
 authors:
-  - name: PF Design Labs
-    email: pfdesignlabs@example.com
+- name: PF Design Labs
+  email: pfdesignlabs@example.com
 
 entry: forgepcb.ato
 
-dependencies: {}
+dependencies:
+  - generics
 
 # Build configuration
 builds:
   default:
-    entry: forgepcb.ato
+    entry: power_demo.ato:PowerDemo
     output: build/
 
 # Physical constraints (for future layout)
@@ -33,13 +34,13 @@ constraints:
   power_pcb:
     max_size: TBD
     zones:
-      - input_protection
-      - conversion
-      - efuse_protection
-      - variable_bay
+    - input_protection
+    - conversion
+    - efuse_protection
+    - variable_bay
   dbb:
     max_size: TBD
     zones:
-      - bus_headers
-      - configuration
-      - debug_corner
+    - bus_headers
+    - configuration
+    - debug_corner

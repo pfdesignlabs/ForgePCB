@@ -47,8 +47,8 @@ module DBB:
 
     # === Power Input Interface (from Power PCB) ===
 
-    signal 5V_IN
-    signal 3V3_IN
+    signal V5_IN
+    signal V3V3_IN
     signal GND
 
     # Optional fault telemetry from Power PCB
@@ -63,11 +63,11 @@ module DBB:
     # === Power Distribution ===
 
     # Distribute power to all modules
-    bus_headers.5V_IN ~ 5V_IN
-    bus_headers.3V3_IN ~ 3V3_IN
+    bus_headers.V5_IN ~ V5_IN
+    bus_headers.V3V3_IN ~ V3V3_IN
 
-    switches.5V_IN ~ 5V_IN
-    switches.3V3_IN ~ 3V3_IN
+    switches.V5_IN ~ V5_IN
+    switches.V3V3_IN ~ V3V3_IN
 
     # === Bus Signal Connections ===
 

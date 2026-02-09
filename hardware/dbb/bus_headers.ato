@@ -22,8 +22,8 @@ module BusHeaders:
     """
 
     # Power inputs
-    signal 5V_IN
-    signal 3V3_IN
+    signal V5_IN
+    signal V3V3_IN
     signal GND
 
     # ===== I²C Header (1×6) =====

@@ -1,0 +1,48 @@
+# Working power circuit with generics + custom components
+from "generics/resistors.ato" import Resistor
+from "generics/capacitors.ato" import Capacitor
+
+# Define custom buck converter as a component with actual pins
+component LM2596Buck:
+    """LM2596 5V buck converter IC"""
+    footprint = "Package_TO_SOT_SMD:TO-252-3_TabPin2"
+    mpn = "LM2596S-5.0"
+
+    # Define actual IC pins (TO-252 pinout: 1=VIN, 2=GND/TAB, 3=VOUT)
+    signal pin_1  # VIN
+    signal pin_2  # GND (tab)
+    signal pin_3  # VOUT
+
+module PowerWorking:
+    """
+    Working power path: Input filter -> Buck -> Output filter
+    """
+
+    # Input bulk cap
+    c_in = new Capacitor
+    c_in.value = 220uF +/- 20%
+    c_in.package = "1210"
+
+    # Buck converter
+    buck = new LM2596Buck
+
+    # Output bulk cap (use 100uF for SMD, or use smaller ceramic)
+    c_out = new Capacitor
+    c_out.value = 100uF +/- 20%
+    c_out.package = "1210"
+
+    # Rails
+    signal V24_IN
+    signal V5_OUT
+    signal GND
+
+    # Connections
+    V24_IN ~ c_in.1
+    c_in.2 ~ GND
+
+    V24_IN ~ buck.pin_1
+    buck.pin_2 ~ GND
+    buck.pin_3 ~ V5_OUT
+
+    V5_OUT ~ c_out.1
+    c_out.2 ~ GND

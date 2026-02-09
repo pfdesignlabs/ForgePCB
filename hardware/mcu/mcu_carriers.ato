@@ -59,17 +59,17 @@ module MCUCarriers:
     - Typical carrier consumption: <500mA @ 5V per carrier
     """
 
-    signal 5V_IN
-    signal 3V3_IN
+    signal V5_IN
+    signal V3V3_IN
     signal GND
 
     # Connect power to both carriers
-    esp32_carrier.5V_IN ~ 5V_IN
-    esp32_carrier.3V3_IN ~ 3V3_IN
+    esp32_carrier.V5_IN ~ V5_IN
+    esp32_carrier.V3V3_IN ~ V3V3_IN
     esp32_carrier.GND ~ GND
 
-    pico_carrier.5V_IN ~ 5V_IN
-    pico_carrier.3V3_IN ~ 3V3_IN
+    pico_carrier.V5_IN ~ V5_IN
+    pico_carrier.V3V3_IN ~ V3V3_IN
     pico_carrier.GND ~ GND
 
     # === GPIO Exposure ===

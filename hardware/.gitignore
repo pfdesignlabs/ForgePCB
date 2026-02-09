@@ -1,0 +1,15 @@
+# Atopile build artifacts
+build/
+.ato/
+elec/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~
