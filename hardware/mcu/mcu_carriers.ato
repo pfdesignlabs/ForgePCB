@@ -1,0 +1,171 @@
+# MCU Carriers - Top-Level Integration
+# Feature F003: MCU Carriers and I/O Exposure
+
+from "esp32s3_carrier.ato" import ESP32S3Carrier
+from "rp2040_pico_carrier.ato" import RP2040PicoCarrier
+
+module MCUCarriers:
+    """
+    MCU carrier subsystem for ForgePCB.
+
+    Feature F003 defines two canonical carrier types:
+    - ESP32-S3 DevKit class carrier
+    - RP2040 Pico footprint carrier
+
+    This module provides carrier selection and integration with ForgePCB.
+
+    Usage Model:
+    - User selects which carrier to install (ESP32-S3 or Pico)
+    - Carrier docks into enclosure zone (F004 defines mechanical placement)
+    - Carrier consumes power from ForgePCB Power PCB (5V, 3.3V, GND)
+    - Carrier exposes GPIO via Dupont headers + screw terminals
+    - USB-C on carrier aligns to enclosure front panel cutout
+
+    Interface to ForgePCB:
+    - Power input: 5V_IN, 3V3_IN, GND (from Power PCB)
+    - GPIO exposure: 16× Dupont + 8× screw terminals per carrier
+    - USB: Front-panel aligned USB-C connector
+    - Mounting: 4× M3 holes for secure installation
+    """
+
+    # === Carrier Selection ===
+    """
+    Two carrier variants available:
+    1. ESP32S3Carrier: For ESP32-S3 DevKit class boards
+    2. RP2040PicoCarrier: For RP2040 Pico footprint boards
+
+    In a full build, user selects one carrier type.
+    For multi-carrier support, can instantiate both (if enclosure has space).
+
+    Default configuration: Instantiate both (user populates one or both).
+    """
+
+    # Carrier instances
+    esp32_carrier = new ESP32S3Carrier
+    pico_carrier = new RP2040PicoCarrier
+
+    # === Power Input Interface ===
+    """
+    Carriers consume power from ForgePCB Power PCB.
+
+    Input rails:
+    - 5V_IN: Protected 5V rail from Power PCB eFuse
+    - 3V3_IN: Protected 3.3V rail from Power PCB eFuse
+    - GND: Common ground plane
+
+    Power distribution:
+    - Both carriers can be powered simultaneously (if both installed)
+    - Total current: Limited by Power PCB eFuse ratings (5A @ 5V, 3A @ 3.3V)
+    - Typical carrier consumption: <500mA @ 5V per carrier
+    """
+
+    signal 5V_IN
+    signal 3V3_IN
+    signal GND
+
+    # Connect power to both carriers
+    esp32_carrier.5V_IN ~ 5V_IN
+    esp32_carrier.3V3_IN ~ 3V3_IN
+    esp32_carrier.GND ~ GND
+
+    pico_carrier.5V_IN ~ 5V_IN
+    pico_carrier.3V3_IN ~ 3V3_IN
+    pico_carrier.GND ~ GND
+
+    # === GPIO Exposure ===
+    """
+    Each carrier independently exposes:
+    - 16× GPIO via Dupont headers (GPIO0-GPIO15)
+    - 8× GPIO via screw terminals (T1-T8, subset of GPIO0-GPIO7)
+    - 2× GND terminals near screw terminal bank
+
+    GPIO signals are carrier-specific (not shared between carriers).
+
+    Canonical labeling:
+    - ESP32 carrier: GPIO0-GPIO15 mapped to ESP32-S3 pins
+    - Pico carrier: GPIO0-GPIO15 mapped to RP2040 Pico pins
+    - Silkscreen on each carrier defines mapping
+    - DBB and tooling reference GPIOs by carrier type + GPIO index
+    """
+
+    # GPIO signals are internal to each carrier
+    # (exposed via headers/terminals on carrier PCB, not routed to main system)
+
+    # === USB Interface ===
+    """
+    Each carrier has USB-C connector rigidly aligned to enclosure cutout.
+
+    USB topology:
+    - Option A: Carriers connect to ForgePCB USB hub (F005 defines hub strategy)
+    - Option B: Carriers' USB connectors are independent (separate USB devices to host)
+
+    For now: Independent USB connectors (each carrier is separate USB device).
+    Future (F005): Integrate with internal USB hub for auto-flash/programming.
+    """
+
+    # USB signals internal to each carrier (front-panel aligned connectors)
+
+    # === Physical Placement ===
+    """
+    Carrier placement in enclosure (F004 defines zones):
+    - Carrier zone: Dedicated area for 80×120 mm carrier PCB
+    - Mounting: 4× M3 standoffs securing carrier to enclosure base
+    - USB alignment: Carrier USB-C connector aligns to front panel cutout
+    - Header access: Dupont headers accessible from side/front
+    - Terminal access: Screw terminals accessible from front/side
+
+    Carrier swapping:
+    - User can remove one carrier and install another
+    - No re-wiring of power (standardized 5V/3.3V/GND input)
+    - GPIO labeling stays consistent (carrier silkscreen defines index)
+    """
+
+    # === Integration with ForgePCB System ===
+    """
+    MCU carriers integrate with ForgePCB subsystems:
+
+    Power PCB (F002):
+    - Consumes 5V and 3.3V protected rails
+    - Current draw monitored via eFuse telemetry (optional)
+
+    DBB (F002):
+    - GPIO signals can be tapped to DBB logic analyzer header (optional)
+    - No direct electrical connection (carriers are independent GPIO sources)
+
+    Enclosure (F004):
+    - Carriers mount in dedicated zones
+    - USB connectors align to front panel
+    - Headers/terminals accessible via enclosure openings
+
+    Firmware Tooling (F005):
+    - USB hub integration for auto-flash (future)
+    - Telemetry: Carrier type detection (via I²C EEPROM or GPIO sensing)
+    """
+
+    # === Carrier Type Detection (Optional) ===
+    """
+    Optional: Detect which carrier is installed.
+
+    Methods:
+    - I²C EEPROM on carrier (stores carrier type ID)
+    - GPIO sensing (carrier pulls specific GPIO high/low)
+    - Manual configuration (user tells system which carrier is installed)
+
+    For now: Manual configuration (user knows which carrier is installed).
+    Future (F005): Implement I²C EEPROM for auto-detection.
+    """
+
+    # TODO: Add I²C EEPROM for carrier type detection (F005 integration)
+
+    # === Frozen Decision Compliance (F003) ===
+    """
+    §4.1: Route A carriers (devboards dock into trays) ✓
+    §4.2: Canonical boards (ESP32-S3, RP2040 Pico) ✓
+    §4.3: Carrier envelope (80×120 mm, M3 mounting) ✓
+    §4.4: USB-C rigidly aligned ✓
+    §4.5: GPIO exposure (16× Dupont + 8× terminals) ✓
+    §4.6: Terminal mapping (T1-T4 digital, T5-T8 analog) ✓
+    §4.7: Controls (EN+BOOT for ESP32, RUN for Pico) ✓
+    §4.8: No extra test pads for LA (debug is DBB-centric) ✓
+    §4.9: Canonical labeling (carrier silkscreen defines GPIO index) ✓
+    """
