@@ -1,77 +1,196 @@
-# ForgePCB Power Circuit Demo
-# Shows essential power path for KiCAD import
+# ForgePCB Power PCB Demo - Extended Version
+# Complete power path with realistic topology for KiCAD layout
+
 from "generics/resistors.ato" import Resistor
 from "generics/capacitors.ato" import Capacitor
 
 module PowerDemo:
     """
-    Demonstrates ForgePCB power path:
-    Input connector -> Fuse (resistor) -> Bulk cap -> Buck (placeholder) -> Filter cap -> Output
+    Extended ForgePCB power circuit demonstrating complete topology:
+    - Input stage: connector + fuse + protection
+    - Conversion: 5V and 3.3V buck converters
+    - Output stage: filtering + distribution
+    - Status indicators: power LEDs
 
-    This is a working KiCAD-exportable circuit to demonstrate routing concept.
+    Uses generics library for all components to ensure KiCAD export works.
+    Connectors and LEDs represented as resistors - reassign footprints in KiCAD.
     """
 
-    # === Input Stage ===
+    # ============================================================
+    # INPUT STAGE
+    # ============================================================
 
-    # Fuse (represented as low-value resistor for circuit purposes)
+    # Input fuse (low-value resistor)
     fuse = new Resistor
     fuse.value = 100mohm +/- 10%
     fuse.package = "1206"
 
-    # Input bulk capacitor (24V tolerant)
-    c_bulk_in = new Capacitor
-    c_bulk_in.value = 220uF +/- 20%
-    c_bulk_in.package = "1210"
+    # Input bulk capacitor (24V rail)
+    c_in_bulk = new Capacitor
+    c_in_bulk.value = 220uF +/- 20%
+    c_in_bulk.package = "1210"
 
-    # === Buck Converter Stage ===
-    # Note: Buck IC represented as resistive network for netlist purposes
-    # In real PCB, this would be LM2596S-5.0 TO-252 package
+    # Input ceramic bypass cap
+    c_in_ceramic = new Capacitor
+    c_in_ceramic.value = 100nF +/- 10%
+    c_in_ceramic.package = "0805"
 
-    r_buck_sense = new Resistor
-    r_buck_sense.value = 1kohm +/- 10%
-    r_buck_sense.package = "0805"
+    # ============================================================
+    # 5V BUCK CONVERTER STAGE
+    # ============================================================
 
-    # === Output Stage ===
+    # Buck 5V input cap
+    c_buck5v_in = new Capacitor
+    c_buck5v_in.value = 47uF +/- 20%
+    c_buck5v_in.package = "0805"
 
-    # Output bulk capacitor (5V rail)
-    c_bulk_out = new Capacitor
-    c_bulk_out.value = 100uF +/- 20%
-    c_bulk_out.package = "1210"
+    # Buck converter IC (represented as resistor for netlist)
+    # In real PCB: LM2596S-5.0 or similar
+    buck_5v = new Resistor
+    buck_5v.value = 1kohm +/- 10%
+    buck_5v.package = "0805"
 
-    # Output filter capacitor
-    c_filter_out = new Capacitor
-    c_filter_out.value = 10uF +/- 20%
-    c_filter_out.package = "0805"
+    # Buck 5V output caps (parallel for lower ESR)
+    c_buck5v_out1 = new Capacitor
+    c_buck5v_out1.value = 100uF +/- 20%
+    c_buck5v_out1.package = "1210"
 
-    # Load simulation resistor
-    r_load = new Resistor
-    r_load.value = 10kohm +/- 10%
-    r_load.package = "0805"
+    c_buck5v_out2 = new Capacitor
+    c_buck5v_out2.value = 22uF +/- 20%
+    c_buck5v_out2.package = "0805"
 
-    # === Power Rails ===
-    signal V24_INPUT
-    signal V24_FILTERED
-    signal V5_OUTPUT
-    signal GND
+    # 5V filter ceramic
+    c_5v_filter = new Capacitor
+    c_5v_filter.value = 10uF +/- 20%
+    c_5v_filter.package = "0805"
 
-    # === Connections ===
+    # ============================================================
+    # 3.3V BUCK CONVERTER STAGE
+    # ============================================================
 
-    # Input protection and filtering
+    # Buck 3.3V input cap
+    c_buck3v3_in = new Capacitor
+    c_buck3v3_in.value = 47uF +/- 20%
+    c_buck3v3_in.package = "0805"
+
+    # Buck converter IC (represented as resistor)
+    # In real PCB: LM2596S-3.3 or similar
+    buck_3v3 = new Resistor
+    buck_3v3.value = 1kohm +/- 10%
+    buck_3v3.package = "0805"
+
+    # Buck 3.3V output caps
+    c_buck3v3_out1 = new Capacitor
+    c_buck3v3_out1.value = 100uF +/- 20%
+    c_buck3v3_out1.package = "1210"
+
+    c_buck3v3_out2 = new Capacitor
+    c_buck3v3_out2.value = 22uF +/- 20%
+    c_buck3v3_out2.package = "0805"
+
+    # 3.3V filter ceramic
+    c_3v3_filter = new Capacitor
+    c_3v3_filter.value = 10uF +/- 20%
+    c_3v3_filter.package = "0805"
+
+    # ============================================================
+    # STATUS INDICATORS
+    # ============================================================
+
+    # 5V Power LED + current limiting resistor
+    led_5v_resistor = new Resistor
+    led_5v_resistor.value = 1kohm +/- 10%
+    led_5v_resistor.package = "0805"
+
+    # 3.3V Power LED + current limiting resistor
+    led_3v3_resistor = new Resistor
+    led_3v3_resistor.value = 680ohm +/- 10%
+    led_3v3_resistor.package = "0805"
+
+    # ============================================================
+    # LOAD SIMULATION
+    # ============================================================
+
+    # 5V load resistor
+    load_5v = new Resistor
+    load_5v.value = 10kohm +/- 10%
+    load_5v.package = "0805"
+
+    # 3.3V load resistor
+    load_3v3 = new Resistor
+    load_3v3.value = 10kohm +/- 10%
+    load_3v3.package = "0805"
+
+    # ============================================================
+    # POWER RAILS (SIGNALS)
+    # ============================================================
+
+    signal V24_INPUT     # 24V from barrel jack
+    signal V24_FUSED     # 24V after fuse
+    signal V24_FILTERED  # 24V after input filter caps
+    signal V5_RAIL       # 5V regulated output
+    signal V3V3_RAIL     # 3.3V regulated output
+    signal GND           # Ground plane
+
+    # ============================================================
+    # CONNECTIONS
+    # ============================================================
+
+    # --- Input Stage ---
     V24_INPUT ~ fuse.1
-    fuse.2 ~ V24_FILTERED
-    V24_FILTERED ~ c_bulk_in.1
-    c_bulk_in.2 ~ GND
+    fuse.2 ~ V24_FUSED
 
-    # Buck converter (simplified as resistive divider)
-    V24_FILTERED ~ r_buck_sense.1
-    r_buck_sense.2 ~ V5_OUTPUT
+    # Input filtering
+    V24_FUSED ~ c_in_bulk.1
+    c_in_bulk.2 ~ GND
 
-    # Output filtering and load
-    V5_OUTPUT ~ c_bulk_out.1
-    c_bulk_out.2 ~ GND
+    V24_FUSED ~ c_in_ceramic.1
+    c_in_ceramic.2 ~ GND
 
-    V5_OUTPUT ~ c_filter_out.1
-    c_filter_out.2 ~ GND
+    V24_FUSED ~ V24_FILTERED
 
-    V5_OUTPUT ~ r_load.1
-    r_load.2 ~ GND
+    # --- 5V Buck Converter Path ---
+    V24_FILTERED ~ c_buck5v_in.1
+    c_buck5v_in.2 ~ GND
+
+    V24_FILTERED ~ buck_5v.1
+    buck_5v.2 ~ V5_RAIL
+
+    V5_RAIL ~ c_buck5v_out1.1
+    c_buck5v_out1.2 ~ GND
+
+    V5_RAIL ~ c_buck5v_out2.1
+    c_buck5v_out2.2 ~ GND
+
+    V5_RAIL ~ c_5v_filter.1
+    c_5v_filter.2 ~ GND
+
+    # --- 3.3V Buck Converter Path ---
+    V24_FILTERED ~ c_buck3v3_in.1
+    c_buck3v3_in.2 ~ GND
+
+    V24_FILTERED ~ buck_3v3.1
+    buck_3v3.2 ~ V3V3_RAIL
+
+    V3V3_RAIL ~ c_buck3v3_out1.1
+    c_buck3v3_out1.2 ~ GND
+
+    V3V3_RAIL ~ c_buck3v3_out2.1
+    c_buck3v3_out2.2 ~ GND
+
+    V3V3_RAIL ~ c_3v3_filter.1
+    c_3v3_filter.2 ~ GND
+
+    # --- Status LEDs ---
+    V5_RAIL ~ led_5v_resistor.1
+    led_5v_resistor.2 ~ GND
+
+    V3V3_RAIL ~ led_3v3_resistor.1
+    led_3v3_resistor.2 ~ GND
+
+    # --- Load Resistors ---
+    V5_RAIL ~ load_5v.1
+    load_5v.2 ~ GND
+
+    V3V3_RAIL ~ load_3v3.1
+    load_3v3.2 ~ GND

@@ -20,7 +20,7 @@ module ProtectionAndUI:
     - 5× LEDs (2× ON indicators, 3× FAULT indicators)
 
     Interface:
-    - Input: 5V_RAIL, 3V3_RAIL, VVAR_RAIL (from converters/variable bay)
+    - Input: V5_RAIL, V3V3_RAIL, VVAR_RAIL (from converters/variable bay)
     - Output: 5V_OUT, 3V3_OUT, VVAR_OUT (protected outputs)
     - Control: I²C bus for eFuse programming
     - Signals: EN_5V, EN_3V3, FAULT_5V, FAULT_3V3, FAULT_VAR
@@ -290,7 +290,7 @@ module ProtectionAndUI:
     # ===== eFuse Connections =====
 
     # 5V eFuse
-    5V_RAIL ~ efuse_5v.VIN
+    V5_RAIL ~ efuse_5v.VIN
     efuse_5v.VOUT ~ V5_OUT
     efuse_5v.VOUT ~ efuse_5v_cout.p
     efuse_5v_cout.n ~ GND
@@ -301,7 +301,7 @@ module ProtectionAndUI:
     efuse_5v.SCL ~ I2C_SCL
 
     # 3.3V eFuse
-    3V3_RAIL ~ efuse_3v3.VIN
+    V3V3_RAIL ~ efuse_3v3.VIN
     efuse_3v3.VOUT ~ V3V3_OUT
     efuse_3v3.VOUT ~ efuse_3v3_cout.p
     efuse_3v3_cout.n ~ GND
