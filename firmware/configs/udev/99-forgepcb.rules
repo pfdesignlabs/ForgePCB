@@ -1,0 +1,115 @@
+# ForgePCB USB Device Identity Rules
+# Feature F005: Stable USB identity for firmware tooling
+#
+# Installation:
+#   sudo cp 99-forgepcb.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger
+#
+# Purpose:
+#   Create stable symlinks for ForgePCB targets to prevent ambiguity.
+#   Each carrier class is targetable deterministically (F005 frozen decision #3).
+#
+# Frozen Decision: "Flashing without explicit target selection is forbidden."
+
+# ==============================================================================
+# ESP32-S3 DevKit Carrier
+# ==============================================================================
+# VID:PID for ESP32-S3 in USB-SERIAL mode (Espressif USB-JTAG-SERIAL)
+# VID=0x303a (Espressif)
+# PID=0x1001 (ESP32-S3)
+#
+# Create symlink: /dev/forgepcb-esp32s3
+# Match by VID/PID and hub port topology (if multiple ESP32 devices present)
+
+# ESP32-S3 USB-SERIAL interface (CDC-ACM or USB-Serial)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", SYMLINK+="forgepcb-esp32s3", MODE="0666", GROUP="plugdev"
+
+# Alternative: Match by serial number if devkit has unique serial
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", ATTRS{serial}=="<SERIAL>", SYMLINK+="forgepcb-esp32s3", MODE="0666", GROUP="plugdev"
+
+# ==============================================================================
+# RP2040 Pico Carrier
+# ==============================================================================
+# VID:PID for RP2040 in USB-SERIAL mode (Raspberry Pi Pico CDC-ACM)
+# VID=0x2e8a (Raspberry Pi)
+# PID=0x000a (Pico in USB-Serial mode)
+#
+# Create symlink: /dev/forgepcb-rp2040
+
+# RP2040 Pico USB-SERIAL interface (CDC-ACM)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000a", SYMLINK+="forgepcb-rp2040", MODE="0666", GROUP="plugdev"
+
+# RP2040 Pico in BOOTSEL mode (for UF2 flashing via picotool)
+# VID=0x2e8a, PID=0x0003 (RP2 Boot)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="0003", SYMLINK+="forgepcb-rp2040-boot", MODE="0666", GROUP="plugdev"
+
+# ==============================================================================
+# Logic Analyzer Dongle
+# ==============================================================================
+# VID:PID depends on LA dongle type
+# Common options:
+#   - Saleae-compatible: VID=0x0925, PID=0x3881
+#   - Fx2lafw (sigrok): VID=0x04b4, PID=0x8613 (Cypress FX2)
+#
+# Create symlink: /dev/forgepcb-la (if USB-serial) or handle via libusb
+
+# Example: Fx2lafw-based logic analyzer
+SUBSYSTEM=="usb", ATTRS{idVendor}=="04b4", ATTRS{idProduct}=="8613", SYMLINK+="forgepcb-la", MODE="0666", GROUP="plugdev"
+
+# Example: Saleae-compatible analyzer
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0925", ATTRS{idProduct}=="3881", SYMLINK+="forgepcb-la-saleae", MODE="0666", GROUP="plugdev"
+
+# ==============================================================================
+# USB Hub (Internal ForgePCB Hub)
+# ==============================================================================
+# VID:PID for CH334F or similar 4-port hub
+# This rule is optional (hub itself doesn't need a symlink, only downstream devices)
+#
+# Example: Generic USB 2.0 Hub
+# SUBSYSTEM=="usb", ATTRS{idVendor}=="1a40", ATTRS{idProduct}=="0101", SYMLINK+="forgepcb-hub", MODE="0666", GROUP="plugdev"
+
+# ==============================================================================
+# Port Topology Matching (Advanced)
+# ==============================================================================
+# If multiple ESP32 or RP2040 devices are present, use hub port topology to
+# differentiate them.
+#
+# Example: ESP32-S3 on hub port 1
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", KERNELS=="1-1.1:1.0", SYMLINK+="forgepcb-esp32s3", MODE="0666", GROUP="plugdev"
+#
+# Example: RP2040 on hub port 2
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000a", KERNELS=="1-1.2:1.0", SYMLINK+="forgepcb-rp2040", MODE="0666", GROUP="plugdev"
+#
+# To find kernel path: udevadm info -a -n /dev/ttyACM0 | grep KERNELS
+
+# ==============================================================================
+# Permissions
+# ==============================================================================
+# All ForgePCB devices are accessible to 'plugdev' group without sudo.
+# Add your user to plugdev: sudo usermod -a -G plugdev $USER
+# Then log out and log back in.
+
+# ==============================================================================
+# Validation
+# ==============================================================================
+# After installing rules, verify symlinks:
+#   ls -l /dev/forgepcb-*
+#
+# Expected output:
+#   /dev/forgepcb-esp32s3 -> ttyACM0 (or ttyUSB0)
+#   /dev/forgepcb-rp2040 -> ttyACM1 (or ttyUSB1)
+#   /dev/forgepcb-la -> ...
+#
+# If symlinks are missing:
+#   1. Check USB connections (lsusb)
+#   2. Check udev rule syntax (udevadm test /sys/class/tty/ttyACM0)
+#   3. Reload rules (sudo udevadm control --reload-rules && sudo udevadm trigger)
+
+# ==============================================================================
+# Notes
+# ==============================================================================
+# - These rules assume a single ForgePCB instance per host.
+# - If running multiple ForgePCB units, use hub port topology or serial numbers.
+# - F005 frozen decision: "Flashing without explicit target selection is forbidden."
+#   These symlinks enforce explicit targeting (no guessing).
